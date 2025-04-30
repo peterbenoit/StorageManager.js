@@ -2,6 +2,8 @@
 
 StorageManager.js provides a convenient and feature-rich interface to handle localStorage and sessionStorage, offering additional features such as item expiration, batch operations, optional data compression, and storage events.
 
+**✨ [View the Live Demo & Documentation](https://peterbenoit.github.io/StorageManager.js/docs/) ✨** <!-- Update with your actual URL -->
+
 ## Features
 
 -   **localStorage and sessionStorage support**: Easily switch between the two storage types.
@@ -75,7 +77,9 @@ console.log(userData);
 
 ## Demo
 
-A demo of StorageManager.js can be found on [Codepen](https://codepen.io/peterbenoit/pen/qBeaaEO)
+A live interactive demo and full documentation can be found here:
+
+**[https://peterbenoit.github.io/StorageManager.js/docs/](https://peterbenoit.github.io/StorageManager.js/docs/)**
 
 ## Options
 
