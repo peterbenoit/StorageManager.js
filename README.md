@@ -1,8 +1,10 @@
 # StorageManager.js
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fpeterbenoit%2FStorageManager.js)
+
 StorageManager.js provides a convenient and feature-rich interface to handle localStorage and sessionStorage, offering additional features such as item expiration, batch operations, optional data compression, and storage events.
 
-**✨ [View the Live Demo & Documentation](https://peterbenoit.github.io/StorageManager.js/docs/) ✨** <!-- Update with your actual URL -->
+**✨ [View the Live Demo & Documentation](https://storage-manager-js.vercel.app/) ✨**
 
 ## Features
 
@@ -77,15 +79,19 @@ console.log(userData);
 
 ## Demo
 
-A live interactive demo and full documentation can be found here:
+A live interactive demo and full documentation can be found here, hosted on Vercel:
 
-**[https://peterbenoit.github.io/StorageManager.js/docs/](https://peterbenoit.github.io/StorageManager.js/docs/)**
+**[https://storage-manager-js.vercel.app/](https://storage-manager-js.vercel.app/)**
 
 ## Options
 
 -   **namespace**: A string to prepend to each key in storage. Defaults to `""`.
 -   **defaultExpiration**: An object mapping keys to expiration times in seconds.
 -   **enableCompression**: A boolean to enable or disable LZString compression. Defaults to `true`.
+
+## Deployment
+
+This project's documentation and demo page is deployed using [Vercel](https://vercel.com/). The configuration can be found in `vercel.json`.
 
 ## License
 
