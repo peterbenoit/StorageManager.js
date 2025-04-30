@@ -1,4 +1,4 @@
 {
     "version": 2,
-    "public": "docs"
+    "rewrites": [{ "source": "/(.*)", "destination": "/docs/$1" }]
 }
