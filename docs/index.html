@@ -183,6 +183,23 @@
                     white-space: normal;
                 }
             }
+
+            /* Add pulse animation for the Apply button */
+            @keyframes pulse-border {
+                0% {
+                    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+                }
+                70% {
+                    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+                }
+                100% {
+                    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+                }
+            }
+
+            .pulse-button {
+                animation: pulse-border 1.5s infinite;
+            }
         </style>
 
         <link
@@ -332,19 +349,23 @@
                 <section id="installation" aria-labelledby="installation-heading" class="mt-12">
                     <h2 id="installation-heading">Installation</h2>
                     <p>
-                        Include the script directly in your HTML, or install via npm if you're using
-                        a build process.
+                        Include the script directly in your HTML, or install via npm for use with
+                        build systems.
                     </p>
-                    <h3>Direct Include</h3>
-                    <pre><code class="language-html">&lt;!-- Download storageManager.js and place it in your project --&gt;
-&lt;script src="path/to/storageManager.js"&gt;&lt;/script&gt;
-&lt;!-- LZString is loaded automatically if compression is enabled --&gt;</code></pre>
-                    <h3>NPM (Example - if you decide to publish)</h3>
-                    <pre><code class="language-bash">npm install your-package-name # Replace with actual name if published
+                    <h3>NPM Installation</h3>
+                    <pre><code class="language-bash">npm install web-storage-manager-js
 # or
-yarn add your-package-name</code></pre>
-                    <pre><code class="language-javascript">// Then import it in your project
-import StorageManager from 'your-package-name';</code></pre>
+yarn add web-storage-manager-js</code></pre>
+                    <pre><code class="language-javascript">// Import in your project
+import StorageManager from 'web-storage-manager-js';</code></pre>
+
+                    <h3>Direct Include</h3>
+                    <pre><code class="language-html">&lt;!-- Include directly from CDN (replace x.y.z with the desired version) --&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/web-storage-manager@x.y.z/StorageManager.js"&gt;&lt;/script&gt;
+
+&lt;!-- Or download and include locally --&gt;
+&lt;script src="path/to/StorageManager.js"&gt;&lt;/script&gt;
+&lt;!-- LZString is loaded automatically when compression is enabled --&gt;</code></pre>
                 </section>
 
                 <section id="usage" aria-labelledby="usage-heading" class="mt-12">
@@ -533,62 +554,159 @@ localManager.offChange('userProfile');
                 <section id="demo" aria-labelledby="demo-heading" class="mt-12">
                     <h2 id="demo-heading">Live Demo</h2>
                     <p>
-                        Interact with a <code>StorageManager</code> instance using
-                        <code>localStorage</code> and the namespace "<code>demo</code>". Compression
-                        is enabled.
+                        Interact with a <code>StorageManager</code> instance to see its
+                        capabilities. Configure options below.
                     </p>
                     <div
                         id="demo-app"
                         class="space-y-6 p-6 bg-gray-800 rounded-lg border border-gray-700"
                     >
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="dm-key">Key:</label>
-                                <input
-                                    id="dm-key"
-                                    type="text"
-                                    placeholder="Enter storage key"
-                                    aria-describedby="key-desc"
-                                />
-                                <p id="key-desc" class="text-xs text-gray-400 mt-1">
-                                    The key to use for storage operations.
-                                </p>
+                        <!-- Configuration section -->
+                        <div class="border-b border-gray-700 pb-4 mb-4">
+                            <h3 class="text-xl font-medium mb-3">Configuration</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="dm-namespace">Namespace:</label>
+                                    <input
+                                        id="dm-namespace"
+                                        type="text"
+                                        value="demo"
+                                        placeholder="e.g., myApp"
+                                        aria-describedby="namespace-desc"
+                                    />
+                                    <p id="namespace-desc" class="text-xs text-gray-400 mt-1">
+                                        Prefix for all keys to prevent collisions
+                                    </p>
+                                </div>
+                                <div>
+                                    <label for="dm-default-exp">Default Expiration (JSON):</label>
+                                    <input
+                                        id="dm-default-exp"
+                                        type="text"
+                                        placeholder='e.g., {"user": 60, "temp": 30}'
+                                        aria-describedby="default-exp-desc"
+                                    />
+                                    <p id="default-exp-desc" class="text-xs text-gray-400 mt-1">
+                                        JSON object mapping keys to expiration seconds
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <label for="dm-expires">Expires In (seconds, optional):</label>
-                                <input
-                                    id="dm-expires"
-                                    type="number"
-                                    placeholder="e.g., 60"
-                                    min="0"
-                                    aria-describedby="expires-desc"
-                                />
-                                <p id="expires-desc" class="text-xs text-gray-400 mt-1">
-                                    Set expiration when using 'Set' or 'Expires'.
-                                </p>
+                            <div class="flex flex-wrap items-center gap-6 mt-4">
+                                <div class="flex items-center space-x-2">
+                                    <input
+                                        id="dm-storage-type"
+                                        type="checkbox"
+                                        class="h-4 w-4 text-brand focus:ring-brand border-gray-700"
+                                    />
+                                    <label for="dm-storage-type" class="text-sm text-gray-300">
+                                        Use sessionStorage (instead of localStorage)
+                                    </label>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <input
+                                        id="dm-compress"
+                                        type="checkbox"
+                                        class="h-4 w-4 text-brand focus:ring-brand border-gray-700"
+                                    />
+                                    <label for="dm-compress" class="text-sm text-gray-300">
+                                        Enable Compression
+                                    </label>
+                                </div>
+                                <button id="btn-apply-config" class="btn-primary">
+                                    Apply Configuration
+                                </button>
                             </div>
                         </div>
+
+                        <!-- Operations section -->
                         <div>
-                            <label for="dm-value">Value (JSON):</label>
-                            <textarea
-                                id="dm-value"
-                                rows="4"
-                                placeholder='e.g., {"name": "Demo", "count": 1}'
-                                aria-describedby="value-desc"
-                            ></textarea>
-                            <p id="value-desc" class="text-xs text-gray-400 mt-1">
-                                Enter a valid JSON value for the 'Set' operation.
-                            </p>
+                            <h3 class="text-xl font-medium mb-3">Storage Operations</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="dm-key">Key:</label>
+                                    <input
+                                        id="dm-key"
+                                        type="text"
+                                        placeholder="Enter storage key"
+                                        aria-describedby="key-desc"
+                                    />
+                                    <p id="key-desc" class="text-xs text-gray-400 mt-1">
+                                        The key to use for storage operations.
+                                    </p>
+                                </div>
+                                <div>
+                                    <label for="dm-expires">Expires In (seconds, optional):</label>
+                                    <input
+                                        id="dm-expires"
+                                        type="number"
+                                        placeholder="e.g., 60"
+                                        min="0"
+                                        aria-describedby="expires-desc"
+                                    />
+                                    <p id="expires-desc" class="text-xs text-gray-400 mt-1">
+                                        Set expiration when using 'Set' or 'Expires'.
+                                    </p>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="dm-value">Value (JSON):</label>
+                                <textarea
+                                    id="dm-value"
+                                    rows="3"
+                                    placeholder='e.g., {"name": "Demo", "count": 1}'
+                                    aria-describedby="value-desc"
+                                ></textarea>
+                                <p id="value-desc" class="text-xs text-gray-400 mt-1">
+                                    Enter a valid JSON value for the 'Set' operation.
+                                </p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div class="space-y-3">
+                                    <h4 class="font-medium">Basic Operations</h4>
+                                    <div class="flex flex-wrap gap-3">
+                                        <button id="btn-set" class="btn-primary">Set Value</button>
+                                        <button id="btn-get" class="btn-secondary">
+                                            Get Value
+                                        </button>
+                                        <button id="btn-has" class="btn-secondary">Has Key?</button>
+                                        <button id="btn-remove" class="btn-danger">
+                                            Remove Key
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="space-y-3">
+                                    <h4 class="font-medium">Advanced Operations</h4>
+                                    <div class="flex flex-wrap gap-3">
+                                        <button id="btn-expires" class="btn-secondary">
+                                            Set Expiration
+                                        </button>
+                                        <button id="btn-keys" class="btn-secondary">
+                                            List Keys
+                                        </button>
+                                        <button id="btn-getall" class="btn-secondary">
+                                            Get All
+                                        </button>
+                                        <button id="btn-clear" class="btn-danger">
+                                            Clear Namespace
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-3 mt-4">
+                                <h4 class="font-medium">Batch Operations</h4>
+                                <div class="flex flex-wrap gap-3">
+                                    <button id="btn-batch-demo" class="btn-secondary">
+                                        Run Batch Demo
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-400">
+                                    Will create several keys with different values and expirations,
+                                    then retrieve them.
+                                </p>
+                            </div>
                         </div>
-                        <div class="flex flex-wrap gap-3">
-                            <button id="btn-set" class="btn-primary">Set Value</button>
-                            <button id="btn-get" class="btn-secondary">Get Value</button>
-                            <button id="btn-expires" class="btn-secondary">Set Expiration</button>
-                            <button id="btn-has" class="btn-secondary">Has Key?</button>
-                            <button id="btn-keys" class="btn-secondary">List Keys</button>
-                            <button id="btn-remove" class="btn-danger">Remove Key</button>
-                            <button id="btn-clear" class="btn-danger">Clear Demo Namespace</button>
-                        </div>
+
                         <div>
                             <label for="dm-output">Output:</label>
                             <pre
@@ -597,7 +715,9 @@ localManager.offChange('userProfile');
                         </div>
                         <div>
                             <h4 class="text-lg font-medium mb-2">
-                                Current Storage State (Namespace: demo)
+                                Current Storage State (<span id="storage-state-label"
+                                    >localStorage</span
+                                >, Namespace: <span id="namespace-label">demo</span>)
                             </h4>
                             <pre
                                 class="mt-1 min-h-[100px] bg-gray-900 p-3 rounded-md border border-gray-600 overflow-auto"

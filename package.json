@@ -1,0 +1,25 @@
+{
+    "name": "web-storage-manager-js",
+    "version": "1.0.0",
+    "description": "Feature-rich localStorage/sessionStorage wrapper with expiration, compression, batch operations, and cross-tab event listeners",
+    "main": "StorageManager.js",
+    "keywords": [
+        "localStorage",
+        "sessionStorage",
+        "web-storage",
+        "expiration",
+        "compression",
+        "batch",
+        "storage-events"
+    ],
+    "author": "Pete Benoit",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/peterbenoit/StorageManager.js"
+    },
+    "homepage": "https://storage-manager-js.vercel.app/",
+    "bugs": {
+        "url": "https://github.com/peterbenoit/StorageManager.js/issues"
+    }
+}

@@ -21,9 +21,28 @@ StorageManager.js provides a convenient and feature-rich interface to handle loc
 
 ## Installation
 
-You can include StorageManager.js in your project by downloading it or by linking it from your HTML page.
+### NPM Installation
+
+```bash
+npm install web-storage-manager-js
+# or
+yarn add web-storage-manager-js
+```
+
+```javascript
+// Import in your project
+import StorageManager from 'web-storage-manager-js';
+```
+
+### Direct Include
+
+You can include StorageManager.js directly in your HTML:
 
 ```html
+<!-- Include from CDN (replace x.y.z with the desired version) -->
+<script src="https://cdn.jsdelivr.net/npm/web-storage-manager-js@x.y.z/StorageManager.js"></script>
+
+<!-- Or download and include locally -->
 <script src="path/to/StorageManager.js"></script>
 ```
 

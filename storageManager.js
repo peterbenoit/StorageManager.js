@@ -35,8 +35,14 @@ class StorageManager {
 		this.expirationTimers = {};
 		this.enableCompression = options.enableCompression ?? true;
 		this.initStorageListener();
-		// Perform initial cleanup of expired items
-		this.cleanup();
+		// Perform initial cleanup of expired items (defer until LZString is loaded)
+		if (this.enableCompression) {
+			this._ensureLZStringLoaded()
+				.then(() => this.cleanup())
+				.catch(err => console.error('Error loading LZString for cleanup', err));
+		} else {
+			this.cleanup();
+		}
 
 		return new Proxy(this, {
 			get(target, prop, receiver) {
@@ -134,25 +140,38 @@ class StorageManager {
 			return;
 		}
 
-		const decompressedData = LZString.decompressFromUTF16(storedData);
+		let data;
+		if (this.enableCompression) {
+			const decompressedData = LZString.decompressFromUTF16(storedData);
+			if (!decompressedData) {
+				console.error("Failed to decompress data.");
+				return;
+			}
+			data = JSON.parse(decompressedData);
 
-		if (!decompressedData) {
-			console.error("Failed to decompress data.");
-			return;
-		}
-
-		const data = JSON.parse(decompressedData);
-
-		if (!data || !data._compressed) {
-			console.error("Data was not compressed properly.");
-			return;
+			if (!data || !data._compressed) {
+				console.error("Data was not compressed properly.");
+				return;
+			}
+		} else {
+			// Parse uncompressed JSON directly
+			try {
+				data = JSON.parse(storedData);
+			} catch (e) {
+				console.error("Failed to parse uncompressed data:", e);
+				return;
+			}
 		}
 
 		const expirationTime = Date.now() + expiresIn * 1000;
 		data.expiration = expirationTime;
 
-		const compressedData = LZString.compressToUTF16(JSON.stringify(data));
-		this.storage.setItem(namespacedKey, compressedData);
+		if (this.enableCompression) {
+			const compressedData = LZString.compressToUTF16(JSON.stringify(data));
+			this.storage.setItem(namespacedKey, compressedData);
+		} else {
+			this.storage.setItem(namespacedKey, JSON.stringify(data));
+		}
 
 		if (this.expirationTimers[namespacedKey]) {
 			clearTimeout(this.expirationTimers[namespacedKey]);
@@ -269,7 +288,10 @@ class StorageManager {
 	}
 
 	initStorageListener() {
-		window.addEventListener("storage", (event) => {
+		window.addEventListener("storage", async (event) => {
+			if (this.enableCompression) {
+				await this._ensureLZStringLoaded();
+			}
 			const { key, newValue, oldValue } = event;
 			if (this.listeners[key]) {
 				const newData = newValue
