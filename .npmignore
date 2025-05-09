@@ -1,0 +1,14 @@
+# Development files
+.github/
+.vscode/
+docs/
+vercel.json
+
+# Documentation and demo files that shouldn't be in the npm package
+*.md
+!README.md
+!LICENSE
+
+# Other files that might exist
+.DS_Store
+.gitignore

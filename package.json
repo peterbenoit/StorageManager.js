@@ -3,6 +3,11 @@
     "version": "1.0.0",
     "description": "Feature-rich localStorage/sessionStorage wrapper with expiration, compression, batch operations, and cross-tab event listeners",
     "main": "StorageManager.js",
+    "files": [
+        "StorageManager.js",
+        "README.md",
+        "LICENSE"
+    ],
     "keywords": [
         "localStorage",
         "sessionStorage",
