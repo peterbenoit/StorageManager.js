@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>StorageManager.js Test Runner</title>
+	<style>
+		body {
+			font-family: system-ui, -apple-system, sans-serif;
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 20px;
+			background: #f5f5f5;
+		}
+
+		h1 {
+			color: #333;
+		}
+
+		.test-controls {
+			margin: 20px 0;
+			padding: 15px;
+			background: white;
+			border-radius: 8px;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+		}
+
+		button {
+			padding: 10px 20px;
+			margin-right: 10px;
+			border: none;
+			border-radius: 4px;
+			background: #10B981;
+			color: white;
+			cursor: pointer;
+			font-size: 14px;
+			font-weight: 500;
+		}
+
+		button:hover {
+			background: #059669;
+		}
+
+		button:disabled {
+			background: #ccc;
+			cursor: not-allowed;
+		}
+
+		.test-suite {
+			margin: 20px 0;
+			background: white;
+			border-radius: 8px;
+			overflow: hidden;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+		}
+
+		.suite-header {
+			padding: 15px 20px;
+			background: #f8f9fa;
+			border-bottom: 1px solid #e0e0e0;
+			font-weight: 600;
+			color: #333;
+		}
+
+		.test-case {
+			padding: 12px 20px;
+			border-bottom: 1px solid #f0f0f0;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+
+		.test-case:last-child {
+			border-bottom: none;
+		}
+
+		.test-name {
+			flex: 1;
+			color: #555;
+		}
+
+		.test-status {
+			padding: 4px 12px;
+			border-radius: 4px;
+			font-size: 12px;
+			font-weight: 500;
+		}
+
+		.test-status.pass {
+			background: #d1fae5;
+			color: #065f46;
+		}
+
+		.test-status.fail {
+			background: #fee2e2;
+			color: #991b1b;
+		}
+
+		.test-status.running {
+			background: #fef3c7;
+			color: #92400e;
+		}
+
+		.test-status.pending {
+			background: #e5e7eb;
+			color: #6b7280;
+		}
+
+		.summary {
+			margin: 20px 0;
+			padding: 20px;
+			background: white;
+			border-radius: 8px;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+		}
+
+		.summary h2 {
+			margin-top: 0;
+			color: #333;
+		}
+
+		.stats {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+			gap: 15px;
+			margin-top: 15px;
+		}
+
+		.stat {
+			padding: 15px;
+			border-radius: 6px;
+			text-align: center;
+		}
+
+		.stat-pass {
+			background: #d1fae5;
+		}
+
+		.stat-fail {
+			background: #fee2e2;
+		}
+
+		.stat-total {
+			background: #e0e7ff;
+		}
+
+		.stat-value {
+			font-size: 32px;
+			font-weight: 700;
+			margin-bottom: 5px;
+		}
+
+		.stat-label {
+			font-size: 14px;
+			color: #666;
+		}
+
+		.error-detail {
+			margin-top: 10px;
+			padding: 10px;
+			background: #fef2f2;
+			border-left: 3px solid #dc2626;
+			color: #991b1b;
+			font-family: monospace;
+			font-size: 12px;
+		}
+	</style>
+</head>
+
+<body>
+	<h1>StorageManager.js Test Suite</h1>
+
+	<div class="test-controls">
+		<button id="runAllBtn" onclick="runAllTests()">Run All Tests</button>
+		<button id="clearStorageBtn" onclick="clearStorage()">Clear Storage</button>
+	</div>
+
+	<div class="summary" id="summary" style="display: none;">
+		<h2>Test Results</h2>
+		<div class="stats">
+			<div class="stat stat-total">
+				<div class="stat-value" id="totalTests">0</div>
+				<div class="stat-label">Total Tests</div>
+			</div>
+			<div class="stat stat-pass">
+				<div class="stat-value" id="passedTests">0</div>
+				<div class="stat-label">Passed</div>
+			</div>
+			<div class="stat stat-fail">
+				<div class="stat-value" id="failedTests">0</div>
+				<div class="stat-label">Failed</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="testResults"></div>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+	<script src="../StorageManager.js"></script>
+	<script>
+		const testSuites = {
+			'Basic Operations': [
+				{ name: 'Set and get string', test: testSetGetString },
+				{ name: 'Set and get object', test: testSetGetObject },
+				{ name: 'Set and get array', test: testSetGetArray },
+				{ name: 'Return null for non-existent key', test: testNonExistentKey },
+				{ name: 'Remove items', test: testRemove }
+			],
+			'Compression': [
+				{ name: 'Store data with compression', test: testCompression },
+				{ name: 'Store data without compression', test: testNoCompression }
+			],
+			'Namespace': [
+				{ name: 'Isolate keys by namespace', test: testNamespace },
+				{ name: 'Prefix keys with namespace', test: testNamespacePrefix }
+			],
+			'Expiration': [
+				{ name: 'Expire items after timeout', test: testExpiration },
+				{ name: 'Apply default expiration', test: testDefaultExpiration }
+			],
+			'Key Operations': [
+				{ name: 'Check key existence with has()', test: testHas },
+				{ name: 'List all keys with keys()', test: testKeys },
+				{ name: 'Get all data with getAll()', test: testGetAll }
+			],
+			'Batch Operations': [
+				{ name: 'Batch set multiple items', test: testBatchSet },
+				{ name: 'Batch get multiple items', test: testBatchGet },
+				{ name: 'Batch remove multiple items', test: testBatchRemove }
+			]
+		};
+
+		let stats = { total: 0, passed: 0, failed: 0 };
+
+		function sleep(ms) {
+			return new Promise(resolve => setTimeout(resolve, ms));
+		}
+
+		function clearStorage() {
+			localStorage.clear();
+			sessionStorage.clear();
+			console.log('Storage cleared');
+		}
+
+		// Test implementations
+		async function testSetGetString() {
+			const storage = new StorageManager(false, { enableCompression: false });
+			await storage.set('name', 'Alice');
+			const value = await storage.get('name');
+			if (value !== 'Alice') throw new Error(`Expected 'Alice', got '${value}'`);
+		}
+
+		async function testSetGetObject() {
+			const storage = new StorageManager(false, { enableCompression: false });
+			const user = { name: 'Bob', age: 30 };
+			await storage.set('user', user);
+			const value = await storage.get('user');
+			if (JSON.stringify(value) !== JSON.stringify(user)) {
+				throw new Error('Object mismatch');
+			}
+		}
+
+		async function testSetGetArray() {
+			const storage = new StorageManager(false, { enableCompression: false });
+			const items = [1, 2, 3, 'four'];
+			await storage.set('items', items);
+			const value = await storage.get('items');
+			if (JSON.stringify(value) !== JSON.stringify(items)) {
+				throw new Error('Array mismatch');
+			}
+		}
+
+		async function testNonExistentKey() {
+			const storage = new StorageManager(false, { enableCompression: false });
+			const value = await storage.get('nonexistent');
+			if (value !== null) throw new Error(`Expected null, got ${value}`);
+		}
+
+		async function testRemove() {
+			const storage = new StorageManager(false, { enableCompression: false });
+			await storage.set('temp', 'value');
+			await storage.remove('temp');
+			const value = await storage.get('temp');
+			if (value !== null) throw new Error('Item not removed');
+		}
+
+		async function testCompression() {
+			const storage = new StorageManager(false, { enableCompression: true });
+			await storage.set('data', { value: 'test' });
+			const value = await storage.get('data');
+			if (value.value !== 'test') throw new Error('Compression failed');
+		}
+
+		async function testNoCompression() {
+			const storage = new StorageManager(false, { enableCompression: false });
+			await storage.set('data', { value: 'test' });
+			const value = await storage.get('data');
+			if (value.value !== 'test') throw new Error('No compression failed');
+		}
+
+		async function testNamespace() {
+			const storage1 = new StorageManager(false, {
+				namespace: 'app1',
+				enableCompression: false
+			});
+			const storage2 = new StorageManager(false, {
+				namespace: 'app2',
+				enableCompression: false
+			});
+
+			await storage1.set('key', 'value1');
+			await storage2.set('key', 'value2');
+
+			const value1 = await storage1.get('key');
+			const value2 = await storage2.get('key');
+
+			if (value1 !== 'value1' || value2 !== 'value2') {
+				throw new Error('Namespace isolation failed');
+			}
+		}
+
+		async function testNamespacePrefix() {
+			clearStorage();
+			const storage = new StorageManager(false, {
+				namespace: 'myApp',
+				enableCompression: false
+			});
+			await storage.set('test', 'value');
+			const raw = localStorage.getItem('myApp:test');
+			if (!raw) throw new Error('Namespace prefix not applied');
+		}
+
+		async function testExpiration() {
+			const storage = new StorageManager(false, { enableCompression: false });
+			await storage.set('temp', 'value');
+			await storage.expires('temp', 1);
+
+			await sleep(1200);
+
+			const value = await storage.get('temp');
+			if (value !== null) throw new Error('Item did not expire');
+		}
+
+		async function testDefaultExpiration() {
+			const storage = new StorageManager(false, {
+				enableCompression: false,
+				defaultExpiration: { session: 1 }
+			});
+
+			await storage.set('session', 'data');
+			await sleep(1200);
+
+			const value = await storage.get('session');
+			if (value !== null) throw new Error('Default expiration failed');
+		}
+
+		async function testHas() {
+			const storage = new StorageManager(false, { enableCompression: false });
+			await storage.set('exists', 'value');
+
+			const exists = await storage.has('exists');
+			const missing = await storage.has('missing');
+
+			if (!exists || missing) throw new Error('has() check failed');
+		}
+
+		async function testKeys() {
+			clearStorage();
+			const storage = new StorageManager(false, {
+				namespace: 'test',
+				enableCompression: false
+			});
+
+			await storage.set('key1', 'value1');
+			await storage.set('key2', 'value2');
+
+			const keys = await storage.keys();
+			if (keys.length !== 2 || !keys.includes('key1') || !keys.includes('key2')) {
+				throw new Error('keys() failed');
+			}
+		}
+
+		async function testGetAll() {
+			clearStorage();
+			const storage = new StorageManager(false, {
+				namespace: 'test',
+				enableCompression: false
+			});
+
+			await storage.set('name', 'Alice');
+			await storage.set('age', 25);
+
+			const all = await storage.getAll();
+			if (all.name !== 'Alice' || all.age !== 25) {
+				throw new Error('getAll() failed');
+			}
+		}
+
+		async function testBatchSet() {
+			const storage = new StorageManager(false, { enableCompression: false });
+
+			await storage.batchSet([
+				{ key: 'key1', value: 'value1' },
+				{ key: 'key2', value: 'value2' }
+			]);
+
+			const value1 = await storage.get('key1');
+			const value2 = await storage.get('key2');
+
+			if (value1 !== 'value1' || value2 !== 'value2') {
+				throw new Error('batchSet() failed');
+			}
+		}
+
+		async function testBatchGet() {
+			const storage = new StorageManager(false, { enableCompression: false });
+
+			await storage.set('key1', 'value1');
+			await storage.set('key2', 'value2');
+
+			const result = await storage.batchGet(['key1', 'key2']);
+
+			if (result.key1 !== 'value1' || result.key2 !== 'value2') {
+				throw new Error('batchGet() failed');
+			}
+		}
+
+		async function testBatchRemove() {
+			const storage = new StorageManager(false, { enableCompression: false });
+
+			await storage.set('key1', 'value1');
+			await storage.set('key2', 'value2');
+			await storage.set('key3', 'value3');
+
+			await storage.batchRemove(['key1', 'key2']);
+
+			const value1 = await storage.get('key1');
+			const value3 = await storage.get('key3');
+
+			if (value1 !== null || value3 !== 'value3') {
+				throw new Error('batchRemove() failed');
+			}
+		}
+
+		async function runTest(testFn, testName) {
+			try {
+				clearStorage();
+				await testFn();
+				return { passed: true };
+			} catch (error) {
+				return { passed: false, error: error.message };
+			}
+		}
+
+		async function runAllTests() {
+			const btn = document.getElementById('runAllBtn');
+			btn.disabled = true;
+			btn.textContent = 'Running...';
+
+			stats = { total: 0, passed: 0, failed: 0 };
+			const resultsDiv = document.getElementById('testResults');
+			resultsDiv.innerHTML = '';
+
+			for (const [suiteName, tests] of Object.entries(testSuites)) {
+				const suiteDiv = document.createElement('div');
+				suiteDiv.className = 'test-suite';
+
+				const header = document.createElement('div');
+				header.className = 'suite-header';
+				header.textContent = suiteName;
+				suiteDiv.appendChild(header);
+
+				for (const { name, test } of tests) {
+					stats.total++;
+
+					const testDiv = document.createElement('div');
+					testDiv.className = 'test-case';
+
+					const nameDiv = document.createElement('div');
+					nameDiv.className = 'test-name';
+					nameDiv.textContent = name;
+
+					const statusDiv = document.createElement('div');
+					statusDiv.className = 'test-status running';
+					statusDiv.textContent = 'Running...';
+
+					testDiv.appendChild(nameDiv);
+					testDiv.appendChild(statusDiv);
+					suiteDiv.appendChild(testDiv);
+
+					resultsDiv.appendChild(suiteDiv);
+
+					// Run test
+					const result = await runTest(test, name);
+
+					if (result.passed) {
+						stats.passed++;
+						statusDiv.className = 'test-status pass';
+						statusDiv.textContent = 'PASS';
+					} else {
+						stats.failed++;
+						statusDiv.className = 'test-status fail';
+						statusDiv.textContent = 'FAIL';
+
+						const errorDiv = document.createElement('div');
+						errorDiv.className = 'error-detail';
+						errorDiv.textContent = result.error;
+						testDiv.appendChild(errorDiv);
+					}
+				}
+			}
+
+			// Update summary
+			document.getElementById('summary').style.display = 'block';
+			document.getElementById('totalTests').textContent = stats.total;
+			document.getElementById('passedTests').textContent = stats.passed;
+			document.getElementById('failedTests').textContent = stats.failed;
+
+			btn.disabled = false;
+			btn.textContent = 'Run All Tests';
+
+			console.log('Tests completed:', stats);
+		}
+	</script>
+</body>
+
+</html>

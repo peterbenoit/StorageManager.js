@@ -1,0 +1,51 @@
+---
+title: Introduction
+description: Learn about StorageManager.js and why it's the best choice for managing browser storage.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+StorageManager.js provides a convenient and feature-rich interface to handle `localStorage` and `sessionStorage`. It simplifies common tasks and adds powerful features like automatic item expiration, batch operations, optional data compression using LZString, and storage event listeners.
+
+## What is StorageManager.js?
+
+StorageManager.js is a lightweight JavaScript library that wraps the native Web Storage API (localStorage and sessionStorage) with additional functionality that makes working with browser storage easier and more powerful.
+
+## Key Features
+
+- **Switch between storage types** — Easily toggle between `localStorage` and `sessionStorage` with a single parameter
+- **Automatic expiration** — Set items to expire automatically after a specified duration
+- **Batch operations** — Perform batch `set`, `get`, and `remove` operations efficiently
+- **Optional compression** — Compress stored data using LZString to save space (loaded automatically when enabled)
+- **Cross-tab event listeners** — Listen for changes to specific storage keys across tabs and windows
+- **Automatic cleanup** — Expired items are automatically removed on initialization
+- **Key existence check** — Use `has(key)` to verify a key exists without retrieving the value
+- **Namespace support** — Prefix all keys with a namespace to avoid collisions
+- **Key listing** — Use `keys()` to list all keys within the current namespace
+- **Bulk retrieval** — Use `getAll()` to retrieve all key-value pairs in the namespace
+- **Unsubscribe listeners** — Use `offChange(key)` to remove change listeners for a key
+
+## Browser Compatibility
+
+StorageManager.js works in all modern browsers that support:
+- localStorage and sessionStorage (IE8+)
+- ES6 Promises and async/await (or use a polyfill for older browsers)
+- Optional: LZString for compression (loaded automatically from CDN when enabled)
+
+<Aside type="tip">
+  All methods that interact with storage are async when compression is enabled, due to the potential loading of LZString. They return Promises, so you can use `await` or `.then()`.
+</Aside>
+
+## When to Use StorageManager.js
+
+StorageManager.js is perfect for:
+- Applications that need temporary or persistent client-side storage
+- Managing user preferences or session data
+- Caching API responses with expiration
+- Storing form data with automatic cleanup
+- Synchronizing state across multiple tabs
+- Applications that need to optimize storage space with compression
+
+## Next Steps
+
+Ready to get started? Head over to the [Installation](/getting-started/installation/) guide to add StorageManager.js to your project.

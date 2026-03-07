@@ -1,0 +1,147 @@
+---
+title: Constructor
+description: Learn how to create and configure a StorageManager instance.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The `StorageManager` constructor creates a new instance that manages browser storage with optional configuration for namespacing, compression, and default expiration.
+
+## Syntax
+
+```javascript
+new StorageManager(useSession, options)
+```
+
+## Parameters
+
+### `useSession` (Boolean, optional)
+
+Determines which storage type to use:
+- `false` (default) — Uses `localStorage` (persists even after browser close)
+- `true` — Uses `sessionStorage` (clears when the tab/window is closed)
+
+```javascript
+// Use localStorage
+const local = new StorageManager(false);
+
+// Use sessionStorage
+const session = new StorageManager(true);
+```
+
+### `options` (Object, optional)
+
+Configuration object with the following properties:
+
+#### `namespace` (String)
+
+A prefix prepended to all keys (followed by a colon `:`). This helps avoid key collisions when multiple parts of your application use storage, or when multiple applications share the same domain.
+
+**Default:** `""` (empty string, no namespace)
+
+```javascript
+const storage = new StorageManager(false, {
+  namespace: 'myApp'
+});
+
+// When you set a key, it's actually stored as "myApp:keyName"
+await storage.set('user', { name: 'Alice' });
+// Stored in localStorage as: "myApp:user"
+```
+
+<Aside type="tip">
+  Using namespaces is highly recommended to prevent conflicts, especially when working with multiple instances or applications on the same domain.
+</Aside>
+
+#### `defaultExpiration` (Object)
+
+A map of key names to default expiration times in seconds. When you set a key that's listed here, it will automatically expire after the specified duration.
+
+**Default:** `{}` (no default expirations)
+
+```javascript
+const storage = new StorageManager(false, {
+  namespace: 'myApp',
+  defaultExpiration: {
+    authToken: 3600,   // Expires in 1 hour
+    sessionInfo: 1800, // Expires in 30 minutes
+    tempData: 300      // Expires in 5 minutes
+  }
+});
+
+// This will automatically expire in 1 hour
+await storage.set('authToken', 'xyz123');
+
+// This key has no default expiration, so it won't expire
+await storage.set('userPreferences', { theme: 'dark' });
+```
+
+#### `enableCompression` (Boolean)
+
+Whether to use LZString compression for stored data. When enabled, data is compressed before storing and decompressed when retrieving, which can significantly reduce storage usage for large objects.
+
+**Default:** `true`
+
+**Important:** When compression is enabled, LZString is loaded automatically from CDN (https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js) if it's not already available. All storage methods become asynchronous and return Promises.
+
+```javascript
+// With compression enabled (default)
+const compressed = new StorageManager(false, {
+  enableCompression: true
+});
+
+// Without compression (methods are still async, but no compression happens)
+const plain = new StorageManager(false, {
+  enableCompression: false
+});
+```
+
+<Aside>
+  Even when compression is disabled, all storage methods remain asynchronous for API consistency. Always use `await` or `.then()`.
+</Aside>
+
+## Complete Example
+
+```javascript
+// Create a comprehensive StorageManager instance
+const storage = new StorageManager(false, {
+  namespace: 'myApp',
+  defaultExpiration: {
+    session: 3600,      // Sessions expire in 1 hour
+    cache: 1800,        // Cache expires in 30 minutes
+    temp: 300           // Temporary data expires in 5 minutes
+  },
+  enableCompression: true
+});
+
+// All keys will be prefixed with "myApp:"
+// Keys with default expiration will expire automatically
+// Data will be compressed to save space
+```
+
+## Instance Properties
+
+After creating an instance, you can access (but should not modify) these properties:
+
+- `storage` — The underlying storage object (localStorage or sessionStorage)
+- `namespace` — The namespace prefix
+- `defaultExpiration` — The default expiration map
+- `enableCompression` — Whether compression is enabled
+
+```javascript
+const storage = new StorageManager(false, { namespace: 'app' });
+console.log(storage.namespace); // Output: 'app'
+```
+
+## Automatic Cleanup
+
+When a StorageManager instance is created, it automatically runs a cleanup operation that removes all expired items within its namespace. This ensures that stale data doesn't accumulate in storage.
+
+```javascript
+// On instantiation, any expired items in the "myApp" namespace are removed
+const storage = new StorageManager(false, { namespace: 'myApp' });
+```
+
+## Next Steps
+
+Now that you understand how to create instances, learn about the available [Storage Methods](/api/storage-methods/) for reading and writing data.

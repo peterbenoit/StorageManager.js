@@ -1,0 +1,284 @@
+---
+title: Event Listeners
+description: Monitor storage changes across tabs and windows with event listeners.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+StorageManager.js allows you to listen for changes to specific keys across different tabs or windows. This is useful for keeping your application synchronized when a user has multiple tabs open.
+
+## How It Works
+
+The event listener system is built on top of the browser's native `storage` event, which fires when storage is modified in a *different* browsing context (tab or window) on the same domain.
+
+<Aside>
+  Storage events are **cross-tab** only. Changes made in the same tab that registered the listener will not trigger the callback. This is a browser limitation, not a library limitation.
+</Aside>
+
+## onChange()
+
+Registers a callback function to be executed when a specific key changes in storage.
+
+### Syntax
+
+```javascript
+storage.onChange(key, callback)
+```
+
+### Parameters
+
+- `key` (String) — The key to listen for changes on
+- `callback` (Function) — A function called when the key changes. Receives:
+  - `newValue` (Any) — The new value (parsed from JSON)
+  - `oldValue` (Any) — The previous value (parsed from JSON)
+
+### Returns
+
+`void` (synchronous method)
+
+### Example
+
+```javascript
+// In Tab 1: Register a listener
+storage.onChange('userProfile', (newValue, oldValue) => {
+  console.log('User profile changed!');
+  console.log('Old value:', oldValue);
+  console.log('New value:', newValue);
+
+  // Update UI with new values
+  updateUI(newValue);
+});
+
+// In Tab 2: Change the value
+await storage.set('userProfile', {
+  name: 'Bob',
+  theme: 'light'
+});
+
+// Tab 1's callback is triggered:
+// "User profile changed!"
+// "Old value: { name: 'Alice', theme: 'dark' }"
+// "New value: { name: 'Bob', theme: 'light' }"
+```
+
+### Use Cases
+
+- Synchronizing user preferences across tabs
+- Showing notifications when data changes in another tab
+- Updating a shopping cart when items are added/removed in another tab
+- Real-time collaboration features
+- Keeping dashboards in sync
+
+---
+
+## offChange()
+
+Unregisters the change listener for a specific key.
+
+### Syntax
+
+```javascript
+storage.offChange(key)
+```
+
+### Parameters
+
+- `key` (String) — The key to stop listening for changes on
+
+### Returns
+
+`void` (synchronous method)
+
+### Example
+
+```javascript
+// Register a listener
+storage.onChange('notifications', (newValue) => {
+  showNotification(newValue);
+});
+
+// Later: Stop listening
+storage.offChange('notifications');
+
+// Changes to 'notifications' will no longer trigger the callback
+```
+
+<Aside type="tip">
+  Always call `offChange()` when you no longer need to listen for changes, especially when components unmount or pages navigate away. This prevents memory leaks.
+</Aside>
+
+---
+
+## Complete Example: Multi-Tab Sync
+
+Here's a complete example of synchronizing state across multiple tabs:
+
+### Tab 1: Main Application
+
+```javascript
+const storage = new StorageManager(false, {
+  namespace: 'myApp'
+});
+
+// Initialize the UI with stored data
+const cart = await storage.get('cart') || [];
+renderCart(cart);
+
+// Listen for cart changes from other tabs
+storage.onChange('cart', (newCart) => {
+  console.log('Cart updated in another tab');
+  renderCart(newCart);
+  showNotification('Your cart was updated');
+});
+
+// Function to render cart items
+function renderCart(items) {
+  const cartElement = document.getElementById('cart');
+  cartElement.innerHTML = items.map(item =>
+    `<div>${item.name} - $${item.price}</div>`
+  ).join('');
+}
+
+function showNotification(message) {
+  // Show a toast/notification
+  console.log('Notification:', message);
+}
+```
+
+### Tab 2: Product Page
+
+```javascript
+const storage = new StorageManager(false, {
+  namespace: 'myApp'
+});
+
+// Add item to cart
+async function addToCart(item) {
+  const cart = await storage.get('cart') || [];
+  cart.push(item);
+  await storage.set('cart', cart);
+
+  console.log('Item added to cart');
+  // Tab 1 will automatically be notified and update its UI
+}
+
+// User clicks "Add to Cart"
+document.getElementById('addBtn').addEventListener('click', () => {
+  addToCart({
+    id: 123,
+    name: 'Widget',
+    price: 29.99
+  });
+});
+```
+
+---
+
+## Advanced Example: Real-Time Preferences
+
+Sync user preferences across all open tabs:
+
+```javascript
+const storage = new StorageManager(false, {
+  namespace: 'myApp'
+});
+
+// Initialize theme from storage
+const savedTheme = await storage.get('theme') || 'light';
+applyTheme(savedTheme);
+
+// Listen for theme changes
+storage.onChange('theme', (newTheme) => {
+  console.log(`Theme changed to ${newTheme} in another tab`);
+  applyTheme(newTheme);
+});
+
+// Theme toggle button
+document.getElementById('themeToggle').addEventListener('click', async () => {
+  const currentTheme = await storage.get('theme') || 'light';
+  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+  await storage.set('theme', newTheme);
+  applyTheme(newTheme);
+  // All other tabs will automatically update their theme
+});
+
+function applyTheme(theme) {
+  document.body.className = theme;
+  document.getElementById('themeToggle').textContent =
+    theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode';
+}
+
+// Clean up listener when page unloads
+window.addEventListener('beforeunload', () => {
+  storage.offChange('theme');
+});
+```
+
+---
+
+## Multiple Listeners
+
+You can register listeners for multiple keys in the same instance:
+
+```javascript
+// Listen for user profile changes
+storage.onChange('userProfile', (newProfile) => {
+  updateUserDisplay(newProfile);
+});
+
+// Listen for settings changes
+storage.onChange('settings', (newSettings) => {
+  applySettings(newSettings);
+});
+
+// Listen for notifications
+storage.onChange('notifications', (notifications) => {
+  showNotifications(notifications);
+});
+
+// Later: Clean up all listeners
+storage.offChange('userProfile');
+storage.offChange('settings');
+storage.offChange('notifications');
+```
+
+---
+
+## Limitations
+
+1. **Cross-tab only**: The `storage` event only fires in tabs *other than* the one that made the change.
+2. **Same origin**: Tabs must be on the same domain/protocol/port.
+3. **Browser support**: All modern browsers support the storage event (IE8+).
+
+<Aside type="caution">
+  If you need same-tab synchronization, consider using other patterns like event emitters or state management libraries instead of storage events.
+</Aside>
+
+## Best Practices
+
+1. **Clean up listeners**: Always call `offChange()` when you're done listening
+2. **Handle null values**: Check for null in callbacks (key might have been removed)
+3. **Debounce rapid changes**: If you expect frequent updates, debounce your callback
+4. **Validate data**: Always validate data in callbacks before using it
+
+```javascript
+// Good: Clean up and validate
+storage.onChange('user', (newUser) => {
+  if (!newUser) {
+    console.log('User logged out in another tab');
+    redirectToLogin();
+    return;
+  }
+
+  updateUserDisplay(newUser);
+});
+
+window.addEventListener('beforeunload', () => {
+  storage.offChange('user');
+});
+```
+
+## Next Steps
+
+Explore practical [Examples](/examples/basic/) to see all these features working together in real applications.

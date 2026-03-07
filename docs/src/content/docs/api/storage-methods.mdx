@@ -1,0 +1,324 @@
+---
+title: Storage Methods
+description: Core methods for reading, writing, and managing individual items in storage.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+These methods handle individual storage operations like setting, getting, and removing items.
+
+<Aside>
+  All methods are asynchronous and return Promises. Always use `await` or `.then()` when calling them.
+</Aside>
+
+## set()
+
+Stores a JSON-serializable value associated with a key.
+
+### Syntax
+
+```javascript
+await storage.set(key, value)
+```
+
+### Parameters
+
+- `key` (String) — The key to store the value under
+- `value` (Any JSON-serializable value) — The value to store (object, array, string, number, boolean, null)
+
+### Returns
+
+`Promise<void>`
+
+### Errors
+
+Throws an error if the value is not JSON-serializable.
+
+### Example
+
+```javascript
+// Store primitive values
+await storage.set('username', 'Alice');
+await storage.set('count', 42);
+await storage.set('isActive', true);
+
+// Store objects
+await storage.set('user', {
+  name: 'Alice',
+  email: 'alice@example.com',
+  roles: ['admin', 'user']
+});
+
+// Store arrays
+await storage.set('items', [1, 2, 3, 4, 5]);
+```
+
+<Aside type="tip">
+  If the key has a default expiration configured in the constructor, it will automatically expire after the specified duration.
+</Aside>
+
+---
+
+## get()
+
+Retrieves the value associated with a key.
+
+### Syntax
+
+```javascript
+await storage.get(key)
+```
+
+### Parameters
+
+- `key` (String) — The key to retrieve
+
+### Returns
+
+`Promise<any>` — The stored value (parsed from JSON), or `null` if:
+- The key doesn't exist
+- The item has expired (and is automatically removed)
+
+### Example
+
+```javascript
+const user = await storage.get('user');
+console.log(user); // Output: { name: 'Alice', email: '...' }
+
+const missing = await storage.get('nonexistent');
+console.log(missing); // Output: null
+```
+
+---
+
+## expires()
+
+Sets or updates the expiration time for an existing key.
+
+### Syntax
+
+```javascript
+await storage.expires(key, expiresIn)
+```
+
+### Parameters
+
+- `key` (String) — The key to set expiration for
+- `expiresIn` (Number) — The time in seconds from now until the item expires
+
+### Returns
+
+`Promise<void>`
+
+### Example
+
+```javascript
+// Store a value
+await storage.set('tempData', { info: 'test' });
+
+// Set it to expire in 10 minutes (600 seconds)
+await storage.expires('tempData', 600);
+
+// Update expiration to 5 minutes
+await storage.expires('tempData', 300);
+```
+
+<Aside>
+  If the key doesn't exist when you call `expires()`, the expiration will be set but won't have any effect until you store a value with that key.
+</Aside>
+
+---
+
+## remove()
+
+Removes an item from storage and clears any associated expiration timer.
+
+### Syntax
+
+```javascript
+await storage.remove(key)
+```
+
+### Parameters
+
+- `key` (String) — The key to remove
+
+### Returns
+
+`Promise<void>`
+
+### Example
+
+```javascript
+await storage.set('tempToken', 'abc123');
+// Later...
+await storage.remove('tempToken');
+
+const token = await storage.get('tempToken');
+console.log(token); // Output: null
+```
+
+---
+
+## has()
+
+Checks if a key exists in storage and has not expired.
+
+### Syntax
+
+```javascript
+await storage.has(key)
+```
+
+### Parameters
+
+- `key` (String) — The key to check
+
+### Returns
+
+`Promise<boolean>` — `true` if the key exists and is not expired, `false` otherwise
+
+### Example
+
+```javascript
+await storage.set('user', { name: 'Alice' });
+
+const hasUser = await storage.has('user');
+console.log(hasUser); // Output: true
+
+const hasOther = await storage.has('nonexistent');
+console.log(hasOther); // Output: false
+```
+
+<Aside type="tip">
+  Use `has()` when you only need to check existence without retrieving the value. It's more efficient than calling `get()` and checking for `null`.
+</Aside>
+
+---
+
+## keys()
+
+Returns an array of all keys within the instance's namespace.
+
+### Syntax
+
+```javascript
+await storage.keys()
+```
+
+### Returns
+
+`Promise<string[]>` — An array of key names (without the namespace prefix)
+
+### Example
+
+```javascript
+await storage.set('user', { name: 'Alice' });
+await storage.set('preferences', { theme: 'dark' });
+await storage.set('settings', { lang: 'en' });
+
+const allKeys = await storage.keys();
+console.log(allKeys); // Output: ['user', 'preferences', 'settings']
+```
+
+<Aside>
+  The `keys()` method returns all keys in the namespace, including expired ones. Use `has()` to check if a specific key is still valid.
+</Aside>
+
+---
+
+## getAll()
+
+Retrieves all non-expired key-value pairs within the instance's namespace.
+
+### Syntax
+
+```javascript
+await storage.getAll()
+```
+
+### Returns
+
+`Promise<Object>` — An object mapping keys to their values. Expired items are excluded.
+
+### Example
+
+```javascript
+await storage.set('user', { name: 'Alice' });
+await storage.set('preferences', { theme: 'dark' });
+await storage.set('expired', 'test');
+await storage.expires('expired', 1); // Expires in 1 second
+
+// Wait for expiration
+await new Promise(resolve => setTimeout(resolve, 1100));
+
+const allData = await storage.getAll();
+console.log(allData);
+// Output: { user: { name: 'Alice' }, preferences: { theme: 'dark' } }
+// Note: 'expired' is not included
+```
+
+---
+
+## clear()
+
+Removes **all** items associated with the instance's namespace from storage.
+
+### Syntax
+
+```javascript
+await storage.clear()
+```
+
+### Returns
+
+`Promise<void>`
+
+### Example
+
+```javascript
+await storage.set('key1', 'value1');
+await storage.set('key2', 'value2');
+await storage.set('key3', 'value3');
+
+// Remove everything in this namespace
+await storage.clear();
+
+const allKeys = await storage.keys();
+console.log(allKeys); // Output: []
+```
+
+<Aside type="caution">
+  The `clear()` method is destructive and cannot be undone. Use it carefully, especially in production code.
+</Aside>
+
+---
+
+## cleanup()
+
+Manually triggers a cleanup of expired items within the namespace. This is automatically called during instantiation, but you can call it manually if needed.
+
+### Syntax
+
+```javascript
+await storage.cleanup()
+```
+
+### Returns
+
+`Promise<void>`
+
+### Example
+
+```javascript
+// Manually clean up expired items
+await storage.cleanup();
+```
+
+<Aside>
+  The `cleanup()` method is usually not needed because expired items are automatically removed when you try to retrieve them with `get()`, and cleanup runs on initialization.
+</Aside>
+
+## Next Steps
+
+Learn about [Batch Operations](/api/batch-operations/) for efficiently handling multiple items at once.

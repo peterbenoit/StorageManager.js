@@ -1,0 +1,46 @@
+---
+title: StorageManager.js
+description: Modern localStorage/sessionStorage wrapper with expiration, compression, batch operations, and cross-tab event listeners.
+template: splash # Remove or comment out this line to display the site sidebar on this page.
+hero:
+  tagline: A convenient and feature‑rich interface for localStorage/sessionStorage, offering expiration, compression, batch operations, and events.
+  actions:
+    - text: Get Started
+      link: /getting-started/introduction/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/peterbenoit/StorageManager.js
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Key Features
+
+<CardGrid stagger>
+  <Card title="Automatic Expiration" icon="clock">
+    Set items to expire automatically after a specified duration. Expired items are cleaned up automatically.
+  </Card>
+  <Card title="Batch Operations" icon="list-format">
+    Perform batch set, get, and remove operations efficiently for multiple items at once.
+  </Card>
+  <Card title="Optional Compression" icon="compress">
+    Optionally compress stored data using LZString to save space and optimize storage.
+  </Card>
+  <Card title="Cross-Tab Events" icon="information">
+    Listen for changes to specific storage keys across tabs and windows in real-time.
+  </Card>
+  <Card title="Namespacing" icon="tag">
+    Supports namespacing to avoid key collisions between different parts of your application.
+  </Card>
+  <Card title="Type-Safe" icon="approve-check">
+    Automatically handles JSON serialization/deserialization with proper error handling.
+  </Card>
+</CardGrid>
+
+## Why StorageManager.js?
+
+StorageManager.js simplifies working with browser storage by providing a consistent, feature-rich API that handles common tasks like expiration, compression, and event listening—all while maintaining a small footprint and zero dependencies (except optional LZString for compression).
+
+Whether you're building a simple web app or a complex application with multiple tabs, StorageManager.js has you covered.

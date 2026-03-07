@@ -108,6 +108,37 @@ A live interactive demo and full documentation can be found here, hosted on Verc
 -   **defaultExpiration**: An object mapping keys to expiration times in seconds.
 -   **enableCompression**: A boolean to enable or disable LZString compression. Defaults to `true`.
 
+## Testing
+
+The library includes a comprehensive test suite with 80+ tests covering all features and edge cases.
+
+### Running Tests
+
+The easiest way to run tests is using the browser-based test runner:
+
+```bash
+# Open the test runner in your browser
+open test/test-runner.html
+# or on Windows: start test/test-runner.html
+```
+
+Alternatively, run the npm test script:
+
+```bash
+npm test
+```
+
+The test suite validates:
+- Basic storage operations (set, get, remove)
+- Compression (on/off modes)
+- Namespace isolation
+- Expiration and cleanup
+- Batch operations
+- Change listeners and cross-tab events
+- Edge cases and error handling
+
+For more details on testing, see [test/README.md](test/README.md).
+
 ## Deployment
 
 This project's documentation and demo page is deployed using [Vercel](https://vercel.com/). The configuration can be found in `vercel.json`.

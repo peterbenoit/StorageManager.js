@@ -225,7 +225,7 @@ class StorageManager {
 		const all = {};
 		const allKeys = await this.keys();
 		for (const key of allKeys) {
-			all[key] = this.get(key);
+			all[key] = await this.get(key);
 		}
 		return all;
 	}
@@ -254,30 +254,36 @@ class StorageManager {
 		delete this.listeners[namespacedKey];
 	}
 
-	batchSet(items) {
+	async batchSet(items) {
 		for (const { key, value, expiresIn } of items) {
-			this.set(key, value);
+			await this.set(key, value);
 			if (expiresIn) {
-				this.expires(key, expiresIn);
+				await this.expires(key, expiresIn);
 			}
 		}
 	}
 
-	batchGet(keys) {
-		return keys.reduce((result, key) => {
-			result[key] = this.get(key);
-			return result;
-		}, {});
+	async batchGet(keys) {
+		const result = {};
+		for (const key of keys) {
+			result[key] = await this.get(key);
+		}
+		return result;
 	}
 
 	cleanup() {
+		// Collect keys first to avoid issues with changing storage length during iteration
+		const keysToCheck = [];
 		for (let i = 0; i < this.storage.length; i++) {
 			const key = this.storage.key(i);
-
 			if (this.namespace && !key.startsWith(this.namespace)) {
 				continue;
 			}
+			keysToCheck.push(key);
+		}
 
+		// Now check and remove expired items
+		for (const key of keysToCheck) {
 			const actualKey = key.replace(`${this.namespace}:`, "");
 			const value = this.get(actualKey);
 
@@ -294,12 +300,35 @@ class StorageManager {
 			}
 			const { key, newValue, oldValue } = event;
 			if (this.listeners[key]) {
-				const newData = newValue
-					? JSON.parse(LZString.decompressFromUTF16(newValue)).value
-					: null;
-				const oldData = oldValue
-					? JSON.parse(LZString.decompressFromUTF16(oldValue)).value
-					: null;
+				let newData = null;
+				let oldData = null;
+
+				if (newValue) {
+					if (this.enableCompression) {
+						const decompressed = LZString.decompressFromUTF16(newValue);
+						newData = decompressed ? JSON.parse(decompressed).value : null;
+					} else {
+						try {
+							newData = JSON.parse(newValue).value;
+						} catch (e) {
+							console.error('Failed to parse new value:', e);
+						}
+					}
+				}
+
+				if (oldValue) {
+					if (this.enableCompression) {
+						const decompressed = LZString.decompressFromUTF16(oldValue);
+						oldData = decompressed ? JSON.parse(decompressed).value : null;
+					} else {
+						try {
+							oldData = JSON.parse(oldValue).value;
+						} catch (e) {
+							console.error('Failed to parse old value:', e);
+						}
+					}
+				}
+
 				this.listeners[key](newData, oldData);
 			}
 		});
@@ -309,9 +338,21 @@ class StorageManager {
 		const namespacedKey = this._getNamespacedKey(key);
 		if (this.listeners[namespacedKey]) {
 			const newValue = this.storage.getItem(namespacedKey);
-			const newData = newValue
-				? JSON.parse(LZString.decompressFromUTF16(newValue)).value
-				: null;
+			let newData = null;
+
+			if (newValue) {
+				if (this.enableCompression) {
+					const decompressed = LZString.decompressFromUTF16(newValue);
+					newData = decompressed ? JSON.parse(decompressed).value : null;
+				} else {
+					try {
+						newData = JSON.parse(newValue).value;
+					} catch (e) {
+						console.error('Failed to parse value in triggerListeners:', e);
+					}
+				}
+			}
+
 			this.listeners[namespacedKey](newData, null);
 		}
 	}

@@ -1,0 +1,95 @@
+---
+title: Installation
+description: How to install and include StorageManager.js in your project.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+StorageManager.js can be installed via npm or included directly in your HTML. Choose the method that best fits your project setup.
+
+## Package Manager Installation
+
+<Tabs>
+  <TabItem label="npm">
+    ```bash
+    npm install web-storage-manager-js
+    ```
+  </TabItem>
+  <TabItem label="yarn">
+    ```bash
+    yarn add web-storage-manager-js
+    ```
+  </TabItem>
+  <TabItem label="pnpm">
+    ```bash
+    pnpm add web-storage-manager-js
+    ```
+  </TabItem>
+</Tabs>
+
+Then import it in your JavaScript or TypeScript file:
+
+```javascript
+import StorageManager from 'web-storage-manager-js';
+
+// Create a new instance
+const storage = new StorageManager();
+```
+
+## CDN Installation
+
+You can include StorageManager.js directly from a CDN:
+
+### jsDelivr
+
+```html
+<!-- Replace x.y.z with the desired version -->
+<script src="https://cdn.jsdelivr.net/npm/web-storage-manager-js@x.y.z/StorageManager.js"></script>
+
+<script>
+  // StorageManager is now available globally
+  const storage = new StorageManager();
+</script>
+```
+
+### Latest Version
+
+To always use the latest version (not recommended for production):
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/web-storage-manager-js/StorageManager.js"></script>
+```
+
+## Local Installation
+
+You can also download the `StorageManager.js` file and include it locally:
+
+```html
+<script src="path/to/StorageManager.js"></script>
+```
+
+Download the latest version from the [GitHub repository](https://github.com/peterbenoit/StorageManager.js).
+
+## Optional: LZString for Compression
+
+If you enable compression (which is enabled by default), StorageManager.js will automatically load LZString from CDN when needed. You don't need to include it manually.
+
+However, if you want to include it yourself or use it offline:
+
+```html
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+<script src="path/to/StorageManager.js"></script>
+```
+
+## Verification
+
+To verify the installation, try creating a simple instance:
+
+```javascript
+const storage = new StorageManager();
+console.log('StorageManager loaded successfully!');
+```
+
+## Next Steps
+
+Now that you have StorageManager.js installed, head over to the [Quick Start](/getting-started/quick-start/) guide to learn how to use it.

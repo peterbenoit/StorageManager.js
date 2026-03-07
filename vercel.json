@@ -1,4 +1,6 @@
 {
-    "version": 2,
-    "rewrites": [{ "source": "/(.*)", "destination": "/docs/$1" }]
+	"version": 2,
+	"buildCommand": "cd docs && npm install && npm run build",
+	"outputDirectory": "docs/dist",
+	"framework": null
 }

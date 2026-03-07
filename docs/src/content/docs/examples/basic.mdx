@@ -1,0 +1,401 @@
+---
+title: Basic Usage
+description: Simple examples demonstrating core StorageManager.js features.
+---
+
+import CodePenButton from '../../../components/CodePenButton.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+These examples demonstrate the fundamental features of StorageManager.js. Each example can be opened in CodePen for live experimentation.
+
+## Simple Counter
+
+A basic counter that persists across page reloads.
+
+```javascript
+// Create storage instance
+const storage = new StorageManager(false, {
+  namespace: 'counterApp',
+  enableCompression: false
+});
+
+// Initialize counter
+let count = await storage.get('count') || 0;
+
+// Update display
+function updateDisplay() {
+  document.getElementById('count').textContent = count;
+}
+
+// Increment button
+document.getElementById('increment').addEventListener('click', async () => {
+  count++;
+  await storage.set('count', count);
+  updateDisplay();
+});
+
+// Reset button
+document.getElementById('reset').addEventListener('click', async () => {
+  count = 0;
+  await storage.remove('count');
+  updateDisplay();
+});
+
+updateDisplay();
+```
+
+<CodePenButton
+  title="StorageManager - Simple Counter"
+  html={`<div style="padding: 20px; font-family: system-ui;">
+  <h2>Counter: <span id="count">0</span></h2>
+  <button id="increment">Increment</button>
+  <button id="reset">Reset</button>
+  <p style="color: #666; margin-top: 20px;">
+    Reload the page to see the count persist!
+  </p>
+</div>`}
+  js={`// Create storage instance
+const storage = new StorageManager(false, {
+  namespace: 'counterApp',
+  enableCompression: false
+});
+
+// Initialize
+(async () => {
+  let count = await storage.get('count') || 0;
+
+  function updateDisplay() {
+    document.getElementById('count').textContent = count;
+  }
+
+  document.getElementById('increment').addEventListener('click', async () => {
+    count++;
+    await storage.set('count', count);
+    updateDisplay();
+  });
+
+  document.getElementById('reset').addEventListener('click', async () => {
+    count = 0;
+    await storage.remove('count');
+    updateDisplay();
+  });
+
+  updateDisplay();
+})();`}
+/>
+
+---
+
+## User Preferences
+
+Store and retrieve user preferences like theme and language.
+
+```javascript
+const storage = new StorageManager(false, {
+  namespace: 'preferences',
+  enableCompression: false
+});
+
+// Load saved preferences
+async function loadPreferences() {
+  const theme = await storage.get('theme') || 'light';
+  const lang = await storage.get('language') || 'en';
+
+  document.getElementById('theme').value = theme;
+  document.getElementById('language').value = lang;
+  applyTheme(theme);
+}
+
+// Save preferences
+async function savePreferences() {
+  const theme = document.getElementById('theme').value;
+  const lang = document.getElementById('language').value;
+
+  await storage.set('theme', theme);
+  await storage.set('language', lang);
+  applyTheme(theme);
+
+  alert('Preferences saved!');
+}
+
+function applyTheme(theme) {
+  document.body.className = theme;
+}
+
+loadPreferences();
+```
+
+<CodePenButton
+  title="StorageManager - User Preferences"
+  html={`<div style="padding: 20px; font-family: system-ui;">
+  <h2>User Preferences</h2>
+  <div>
+    <label>Theme:
+      <select id="theme">
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </label>
+  </div>
+  <div style="margin-top: 10px;">
+    <label>Language:
+      <select id="language">
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+      </select>
+    </label>
+  </div>
+  <button onclick="savePreferences()" style="margin-top: 15px;">
+    Save Preferences
+  </button>
+  <p style="color: #666; margin-top: 20px;">
+    Your preferences are saved and will persist!
+  </p>
+</div>
+
+<style>
+  body.dark {
+    background: #1a1a1a;
+    color: #fff;
+  }
+</style>`}
+  js={`const storage = new StorageManager(false, {
+  namespace: 'preferences',
+  enableCompression: false
+});
+
+async function loadPreferences() {
+  const theme = await storage.get('theme') || 'light';
+  const lang = await storage.get('language') || 'en';
+
+  document.getElementById('theme').value = theme;
+  document.getElementById('language').value = lang;
+  applyTheme(theme);
+}
+
+window.savePreferences = async function() {
+  const theme = document.getElementById('theme').value;
+  const lang = document.getElementById('language').value;
+
+  await storage.set('theme', theme);
+  await storage.set('language', lang);
+  applyTheme(theme);
+
+  alert('Preferences saved!');
+}
+
+function applyTheme(theme) {
+  document.body.className = theme;
+}
+
+loadPreferences();`}
+/>
+
+---
+
+## Form Auto-Save
+
+Automatically save form data as the user types.
+
+```javascript
+const storage = new StorageManager(false, {
+  namespace: 'formApp',
+  enableCompression: false
+});
+
+// Load saved form data
+async function loadFormData() {
+  const data = await storage.get('formData');
+  if (data) {
+    document.getElementById('name').value = data.name || '';
+    document.getElementById('email').value = data.email || '';
+    document.getElementById('message').value = data.message || '';
+  }
+}
+
+// Auto-save on input
+function setupAutoSave() {
+  const inputs = ['name', 'email', 'message'];
+
+  inputs.forEach(id => {
+    document.getElementById(id).addEventListener('input', async () => {
+      const data = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        message: document.getElementById('message').value
+      };
+      await storage.set('formData', data);
+      console.log('Form auto-saved');
+    });
+  });
+}
+
+// Clear form
+async function clearForm() {
+  document.getElementById('name').value = '';
+  document.getElementById('email').value = '';
+  document.getElementById('message').value = '';
+  await storage.remove('formData');
+  alert('Form cleared!');
+}
+
+loadFormData();
+setupAutoSave();
+```
+
+<CodePenButton
+  title="StorageManager - Form Auto-Save"
+  html={`<div style="padding: 20px; font-family: system-ui; max-width: 500px;">
+  <h2>Contact Form</h2>
+  <form onsubmit="return false;">
+    <div style="margin-bottom: 10px;">
+      <label>Name:</label><br>
+      <input type="text" id="name" style="width: 100%; padding: 5px;">
+    </div>
+    <div style="margin-bottom: 10px;">
+      <label>Email:</label><br>
+      <input type="email" id="email" style="width: 100%; padding: 5px;">
+    </div>
+    <div style="margin-bottom: 10px;">
+      <label>Message:</label><br>
+      <textarea id="message" rows="4" style="width: 100%; padding: 5px;"></textarea>
+    </div>
+    <button type="submit">Submit</button>
+    <button type="button" onclick="clearForm()">Clear</button>
+  </form>
+  <p style="color: #666; margin-top: 20px; font-size: 14px;">
+    ✓ Form data is auto-saved as you type
+  </p>
+</div>`}
+  js={`const storage = new StorageManager(false, {
+  namespace: 'formApp',
+  enableCompression: false
+});
+
+async function loadFormData() {
+  const data = await storage.get('formData');
+  if (data) {
+    document.getElementById('name').value = data.name || '';
+    document.getElementById('email').value = data.email || '';
+    document.getElementById('message').value = data.message || '';
+  }
+}
+
+function setupAutoSave() {
+  const inputs = ['name', 'email', 'message'];
+
+  inputs.forEach(id => {
+    document.getElementById(id).addEventListener('input', async () => {
+      const data = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        message: document.getElementById('message').value
+      };
+      await storage.set('formData', data);
+      console.log('Form auto-saved');
+    });
+  });
+}
+
+window.clearForm = async function() {
+  document.getElementById('name').value = '';
+  document.getElementById('email').value = '';
+  document.getElementById('message').value = '';
+  await storage.remove('formData');
+  alert('Form cleared!');
+}
+
+loadFormData();
+setupAutoSave();`}
+/>
+
+---
+
+## Key Listing
+
+Display all stored keys and their values.
+
+```javascript
+const storage = new StorageManager(false, {
+  namespace: 'demo',
+  enableCompression: false
+});
+
+// Add some sample data
+async function addSampleData() {
+  await storage.set('user', { name: 'Alice' });
+  await storage.set('theme', 'dark');
+  await storage.set('count', 42);
+  await displayKeys();
+}
+
+// Display all keys
+async function displayKeys() {
+  const keys = await storage.keys();
+  const list = document.getElementById('keyList');
+
+  list.innerHTML = '';
+
+  for (const key of keys) {
+    const value = await storage.get(key);
+    const li = document.createElement('li');
+    li.innerHTML = `<strong>${key}:</strong> ${JSON.stringify(value)}`;
+    list.appendChild(li);
+  }
+}
+
+displayKeys();
+```
+
+<CodePenButton
+  title="StorageManager - Key Listing"
+  html={`<div style="padding: 20px; font-family: system-ui;">
+  <h2>Stored Keys</h2>
+  <button onclick="addSampleData()">Add Sample Data</button>
+  <button onclick="displayKeys()">Refresh</button>
+  <ul id="keyList" style="margin-top: 20px;">
+    <li style="color: #666;">No keys stored yet</li>
+  </ul>
+</div>`}
+  js={`const storage = new StorageManager(false, {
+  namespace: 'demo',
+  enableCompression: false
+});
+
+window.addSampleData = async function() {
+  await storage.set('user', { name: 'Alice' });
+  await storage.set('theme', 'dark');
+  await storage.set('count', 42);
+  await displayKeys();
+}
+
+window.displayKeys = async function() {
+  const keys = await storage.keys();
+  const list = document.getElementById('keyList');
+
+  list.innerHTML = '';
+
+  if (keys.length === 0) {
+    list.innerHTML = '<li style="color: #666;">No keys stored yet</li>';
+    return;
+  }
+
+  for (const key of keys) {
+    const value = await storage.get(key);
+    const li = document.createElement('li');
+    li.innerHTML = \`<strong>\${key}:</strong> \${JSON.stringify(value)}\`;
+    list.appendChild(li);
+  }
+}
+
+displayKeys();`}
+/>
+
+<Aside type="tip">
+  These examples use `enableCompression: false` for simplicity. In production, you can leave compression enabled (default) to save storage space.
+</Aside>
+
+## Next Steps
+
+Ready for more complex scenarios? Check out the [Advanced Features](/examples/advanced/) examples.

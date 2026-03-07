@@ -1,0 +1,220 @@
+---
+title: Quick Start
+description: Get up and running with StorageManager.js in minutes.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+This guide will walk you through the basics of using StorageManager.js. By the end, you'll be able to store, retrieve, and manage data in browser storage with ease.
+
+## Creating an Instance
+
+First, create a new `StorageManager` instance. You can configure it to use either `localStorage` or `sessionStorage`, and customize options like namespace, default expiration, and compression.
+
+```javascript
+// Use localStorage (default) with compression enabled
+const storage = new StorageManager(false, {
+  namespace: 'myApp',
+  enableCompression: true // Default is true
+});
+
+// Use sessionStorage with compression disabled
+const sessionStorage = new StorageManager(true, {
+  namespace: 'tempData',
+  enableCompression: false
+});
+```
+
+<Aside>
+  When compression is enabled, all storage methods become asynchronous and return Promises. Don't forget to use `await` or `.then()`!
+</Aside>
+
+## Basic Operations
+
+### Storing Data
+
+Store any JSON-serializable value using the `set()` method:
+
+```javascript
+// Store a simple value
+await storage.set('username', 'Alice');
+
+// Store an object
+await storage.set('userProfile', {
+  name: 'Alice',
+  email: 'alice@example.com',
+  theme: 'dark'
+});
+
+// Store an array
+await storage.set('favorites', ['apple', 'banana', 'cherry']);
+```
+
+### Retrieving Data
+
+Retrieve stored data using the `get()` method:
+
+```javascript
+const username = await storage.get('username');
+console.log(username); // Output: 'Alice'
+
+const profile = await storage.get('userProfile');
+console.log(profile.theme); // Output: 'dark'
+```
+
+If the key doesn't exist or has expired, `get()` returns `null`:
+
+```javascript
+const missing = await storage.get('nonexistent');
+console.log(missing); // Output: null
+```
+
+### Removing Data
+
+Remove a stored item using the `remove()` method:
+
+```javascript
+await storage.remove('username');
+```
+
+### Checking for Existence
+
+Check if a key exists (and is not expired) without retrieving its value:
+
+```javascript
+const hasProfile = await storage.has('userProfile');
+console.log(hasProfile); // Output: true or false
+```
+
+## Setting Expiration
+
+One of the most powerful features of StorageManager.js is automatic expiration. Set an expiration time (in seconds) for any item:
+
+```javascript
+// Store a temporary token
+await storage.set('authToken', 'abc123');
+
+// Set it to expire in 5 minutes (300 seconds)
+await storage.expires('authToken', 300);
+```
+
+You can also set a default expiration for specific keys when creating the instance:
+
+```javascript
+const storage = new StorageManager(false, {
+  namespace: 'myApp',
+  defaultExpiration: {
+    authToken: 300,    // 5 minutes
+    sessionInfo: 3600  // 1 hour
+  }
+});
+
+// Now authToken will automatically expire in 5 minutes when set
+await storage.set('authToken', 'abc123');
+```
+
+<Aside type="tip">
+  Expired items are automatically removed when you try to retrieve them with `get()`, and during initialization with the `cleanup()` method.
+</Aside>
+
+## Listing Keys
+
+Get an array of all keys within your namespace:
+
+```javascript
+const allKeys = await storage.keys();
+console.log(allKeys); // Output: ['userProfile', 'favorites', ...]
+```
+
+## Getting All Data
+
+Retrieve all non-expired key-value pairs in your namespace:
+
+```javascript
+const allData = await storage.getAll();
+console.log(allData);
+// Output: { userProfile: {...}, favorites: [...], ... }
+```
+
+## Listening for Changes
+
+Listen for changes to a specific key across tabs or windows:
+
+```javascript
+// In tab/window 1: Register a listener
+storage.onChange('userProfile', (newValue, oldValue) => {
+  console.log('User profile changed!');
+  console.log('Old:', oldValue);
+  console.log('New:', newValue);
+});
+
+// In tab/window 2: Change the value
+await storage.set('userProfile', { name: 'Bob', theme: 'light' });
+
+// Tab/window 1 will receive the change notification
+```
+
+To stop listening, use `offChange()`:
+
+```javascript
+storage.offChange('userProfile');
+```
+
+## Clearing All Data
+
+To remove all items in your namespace:
+
+```javascript
+await storage.clear();
+```
+
+<Aside type="caution">
+  The `clear()` method removes **all** items in the current namespace. Use it carefully!
+</Aside>
+
+## Complete Example
+
+Here's a complete example putting it all together:
+
+```javascript
+// Create a storage manager for user data
+const userStorage = new StorageManager(false, {
+  namespace: 'myApp',
+  defaultExpiration: { session: 3600 }, // 1 hour
+  enableCompression: true
+});
+
+// Store user profile
+await userStorage.set('profile', {
+  name: 'Alice',
+  email: 'alice@example.com',
+  preferences: { theme: 'dark', notifications: true }
+});
+
+// Store session data with automatic expiration
+await userStorage.set('session', { token: 'xyz789', loginTime: Date.now() });
+
+// Retrieve and use the data
+const profile = await userStorage.get('profile');
+console.log(`Welcome back, ${profile.name}!`);
+
+// Check if session is still valid
+const hasSession = await userStorage.has('session');
+if (hasSession) {
+  console.log('User is authenticated');
+} else {
+  console.log('Session expired, please login again');
+}
+
+// Listen for profile changes from other tabs
+userStorage.onChange('profile', (newProfile) => {
+  console.log('Profile updated:', newProfile);
+});
+
+// Later: Clean up
+await userStorage.remove('session');
+```
+
+## Next Steps
+
+Now that you know the basics, explore the [API Reference](/api/constructor/) to learn about all available methods and advanced features like batch operations.

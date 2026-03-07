@@ -1,0 +1,450 @@
+---
+title: Advanced Features
+description: Complex examples demonstrating advanced StorageManager.js capabilities.
+---
+
+import CodePenButton from '../../../components/CodePenButton.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+These examples showcase advanced features like expiration, batch operations, compression, and cross-tab synchronization.
+
+## Automatic Expiration
+
+Store temporary data that expires after a set duration.
+
+```javascript
+const storage = new StorageManager(false, {
+  namespace: 'tempData',
+  defaultExpiration: {
+    session: 60, // Sessions expire in 60 seconds
+  },
+  enableCompression: false
+});
+
+// Store a temporary session
+async function createSession() {
+  await storage.set('session', {
+    token: 'abc123',
+    user: 'Alice',
+    timestamp: Date.now()
+  });
+
+  console.log('Session created, expires in 60 seconds');
+  checkSession();
+}
+
+// Check if session is still valid
+async function checkSession() {
+  const hasSession = await storage.has('session');
+  const session = await storage.get('session');
+
+  document.getElementById('status').textContent =
+    hasSession ? `Active: ${session.user}` : 'Expired';
+}
+
+// Check every second
+setInterval(checkSession, 1000);
+```
+
+<CodePenButton
+  title="StorageManager - Expiration"
+  html={`<div style="padding: 20px; font-family: system-ui;">
+  <h2>Session Expiration Demo</h2>
+  <p>Status: <strong id="status">No session</strong></p>
+  <button onclick="createSession()">Create Session (expires in 60s)</button>
+  <p style="color: #666; margin-top: 20px; font-size: 14px;">
+    The session will automatically expire after 60 seconds.
+  </p>
+</div>`}
+  js={`const storage = new StorageManager(false, {
+  namespace: 'tempData',
+  defaultExpiration: {
+    session: 60,
+  },
+  enableCompression: false
+});
+
+window.createSession = async function() {
+  await storage.set('session', {
+    token: 'abc123',
+    user: 'Alice',
+    timestamp: Date.now()
+  });
+
+  console.log('Session created, expires in 60 seconds');
+  checkSession();
+}
+
+async function checkSession() {
+  const hasSession = await storage.has('session');
+  const session = await storage.get('session');
+
+  document.getElementById('status').textContent =
+    hasSession ? \`Active: \${session.user}\` : 'Expired';
+}
+
+setInterval(checkSession, 1000);
+checkSession();`}
+/>
+
+---
+
+## Batch Operations
+
+Efficiently handle multiple items at once.
+
+```javascript
+const storage = new StorageManager(false, {
+  namespace: 'batchDemo',
+  enableCompression: false
+});
+
+// Initialize with batch set
+async function initialize() {
+  await storage.batchSet([
+    { key: 'user1', value: { name: 'Alice', role: 'admin' } },
+    { key: 'user2', value: { name: 'Bob', role: 'user' } },
+    { key: 'user3', value: { name: 'Charlie', role: 'user' } },
+    { key: 'settings', value: { theme: 'dark', lang: 'en' } }
+  ]);
+
+  console.log('Batch set complete');
+  displayData();
+}
+
+// Retrieve multiple items
+async function displayData() {
+  const data = await storage.batchGet([
+    'user1', 'user2', 'user3', 'settings'
+  ]);
+
+  const output = document.getElementById('output');
+  output.innerHTML = Object.entries(data)
+    .map(([key, value]) =>
+      `<div><strong>${key}:</strong> ${JSON.stringify(value, null, 2)}</div>`
+    )
+    .join('');
+}
+
+// Remove multiple items
+async function cleanup() {
+  await storage.batchRemove(['user1', 'user2', 'user3']);
+  console.log('Users removed');
+  displayData();
+}
+```
+
+<CodePenButton
+  title="StorageManager - Batch Operations"
+  html={`<div style="padding: 20px; font-family: system-ui;">
+  <h2>Batch Operations</h2>
+  <button onclick="initialize()">Initialize Data</button>
+  <button onclick="displayData()">Refresh</button>
+  <button onclick="cleanup()">Remove Users</button>
+  <div id="output" style="margin-top: 20px; font-family: monospace; font-size: 12px;">
+    Click "Initialize Data" to start
+  </div>
+</div>`}
+  js={`const storage = new StorageManager(false, {
+  namespace: 'batchDemo',
+  enableCompression: false
+});
+
+window.initialize = async function() {
+  await storage.batchSet([
+    { key: 'user1', value: { name: 'Alice', role: 'admin' } },
+    { key: 'user2', value: { name: 'Bob', role: 'user' } },
+    { key: 'user3', value: { name: 'Charlie', role: 'user' } },
+    { key: 'settings', value: { theme: 'dark', lang: 'en' } }
+  ]);
+
+  console.log('Batch set complete');
+  displayData();
+}
+
+window.displayData = async function() {
+  const data = await storage.batchGet([
+    'user1', 'user2', 'user3', 'settings'
+  ]);
+
+  const output = document.getElementById('output');
+  output.innerHTML = Object.entries(data)
+    .map(([key, value]) =>
+      \`<div><strong>\${key}:</strong> \${JSON.stringify(value, null, 2)}</div>\`
+    )
+    .join('');
+}
+
+window.cleanup = async function() {
+  await storage.batchRemove(['user1', 'user2', 'user3']);
+  console.log('Users removed');
+  displayData();
+}`}
+/>
+
+---
+
+## Shopping Cart with Expiration
+
+A complete shopping cart that expires after 30 minutes of inactivity.
+
+```javascript
+const storage = new StorageManager(false, {
+  namespace: 'shop',
+  defaultExpiration: {
+    cart: 1800 // 30 minutes
+  },
+  enableCompression: true
+});
+
+// Add item to cart
+async function addToCart(item) {
+  let cart = await storage.get('cart') || [];
+
+  const existing = cart.find(i => i.id === item.id);
+  if (existing) {
+    existing.quantity++;
+  } else {
+    cart.push({ ...item, quantity: 1 });
+  }
+
+  await storage.set('cart', cart);
+  displayCart();
+}
+
+// Display cart
+async function displayCart() {
+  const cart = await storage.get('cart') || [];
+  const cartEl = document.getElementById('cart');
+
+  if (cart.length === 0) {
+    cartEl.innerHTML = '<p>Cart is empty</p>';
+    return;
+  }
+
+  const total = cart.reduce((sum, item) =>
+    sum + (item.price * item.quantity), 0
+  );
+
+  cartEl.innerHTML = cart.map(item =>
+    \`<div>\${item.name} x\${item.quantity} - $\${(item.price * item.quantity).toFixed(2)}</div>\`
+  ).join('') + \`<div><strong>Total: $\${total.toFixed(2)}</strong></div>\`;
+}
+
+// Sample products
+const products = [
+  { id: 1, name: 'Widget', price: 9.99 },
+  { id: 2, name: 'Gadget', price: 19.99 },
+  { id: 3, name: 'Doohickey', price: 14.99 }
+];
+```
+
+<CodePenButton
+  title="StorageManager - Shopping Cart"
+  html={`<div style="padding: 20px; font-family: system-ui;">
+  <h2>Shopping Cart</h2>
+  <div style="display: flex; gap: 20px;">
+    <div>
+      <h3>Products</h3>
+      <button onclick="addProduct(0)">Widget - $9.99</button><br>
+      <button onclick="addProduct(1)">Gadget - $19.99</button><br>
+      <button onclick="addProduct(2)">Doohickey - $14.99</button>
+    </div>
+    <div>
+      <h3>Cart</h3>
+      <div id="cart">Cart is empty</div>
+      <button onclick="clearCart()" style="margin-top: 10px;">Clear Cart</button>
+    </div>
+  </div>
+  <p style="color: #666; margin-top: 20px; font-size: 12px;">
+    Cart expires after 30 minutes (in this demo, set to 60s for testing)
+  </p>
+</div>`}
+  js={`const storage = new StorageManager(false, {
+  namespace: 'shop',
+  defaultExpiration: {
+    cart: 60 // 60 seconds for demo
+  },
+  enableCompression: true
+});
+
+const products = [
+  { id: 1, name: 'Widget', price: 9.99 },
+  { id: 2, name: 'Gadget', price: 19.99 },
+  { id: 3, name: 'Doohickey', price: 14.99 }
+];
+
+window.addProduct = async function(index) {
+  const item = products[index];
+  let cart = await storage.get('cart') || [];
+
+  const existing = cart.find(i => i.id === item.id);
+  if (existing) {
+    existing.quantity++;
+  } else {
+    cart.push({ ...item, quantity: 1 });
+  }
+
+  await storage.set('cart', cart);
+  displayCart();
+}
+
+async function displayCart() {
+  const cart = await storage.get('cart') || [];
+  const cartEl = document.getElementById('cart');
+
+  if (cart.length === 0) {
+    cartEl.innerHTML = '<p>Cart is empty</p>';
+    return;
+  }
+
+  const total = cart.reduce((sum, item) =>
+    sum + (item.price * item.quantity), 0
+  );
+
+  cartEl.innerHTML = cart.map(item =>
+    \`<div>\${item.name} x\${item.quantity} - $\${(item.price * item.quantity).toFixed(2)}</div>\`
+  ).join('') + \`<div><strong>Total: $\${total.toFixed(2)}</strong></div>\`;
+}
+
+window.clearCart = async function() {
+  await storage.remove('cart');
+  displayCart();
+}
+
+displayCart();`}
+/>
+
+---
+
+## Cross-Tab Synchronization
+
+Open this example in multiple tabs to see real-time synchronization.
+
+```javascript
+const storage = new StorageManager(false, {
+  namespace: 'multiTab',
+  enableCompression: false
+});
+
+// Initialize
+let currentUser = await storage.get('currentUser') || null;
+updateDisplay();
+
+// Listen for changes from other tabs
+storage.onChange('currentUser', (newUser) => {
+  currentUser = newUser;
+  updateDisplay();
+  showNotification('User updated in another tab!');
+});
+
+// Login
+async function login(username) {
+  currentUser = { username, loginTime: new Date().toISOString() };
+  await storage.set('currentUser', currentUser);
+  updateDisplay();
+}
+
+// Logout
+async function logout() {
+  currentUser = null;
+  await storage.remove('currentUser');
+  updateDisplay();
+}
+
+function updateDisplay() {
+  const display = document.getElementById('userDisplay');
+  if (currentUser) {
+    display.innerHTML = \`Logged in as: <strong>\${currentUser.username}</strong>\`;
+  } else {
+    display.innerHTML = 'Not logged in';
+  }
+}
+```
+
+<CodePenButton
+  title="StorageManager - Cross-Tab Sync"
+  html={`<div style="padding: 20px; font-family: system-ui;">
+  <h2>Cross-Tab Sync Demo</h2>
+  <p id="userDisplay">Not logged in</p>
+  <div id="notifications" style="color: green; min-height: 20px;"></div>
+  <div style="margin-top: 20px;">
+    <input type="text" id="username" placeholder="Enter username" style="padding: 5px;">
+    <button onclick="doLogin()">Login</button>
+    <button onclick="doLogout()">Logout</button>
+  </div>
+  <p style="color: #666; margin-top: 20px; font-size: 12px;">
+    Open this in multiple tabs to see real-time sync!
+  </p>
+</div>`}
+  js={`const storage = new StorageManager(false, {
+  namespace: 'multiTab',
+  enableCompression: false
+});
+
+let currentUser = null;
+
+async function init() {
+  currentUser = await storage.get('currentUser') || null;
+  updateDisplay();
+
+  storage.onChange('currentUser', (newUser) => {
+    currentUser = newUser;
+    updateDisplay();
+    showNotification('User updated in another tab!');
+  });
+}
+
+window.doLogin = async function() {
+  const username = document.getElementById('username').value;
+  if (!username) return alert('Enter a username');
+
+  currentUser = { username, loginTime: new Date().toISOString() };
+  await storage.set('currentUser', currentUser);
+  updateDisplay();
+  document.getElementById('username').value = '';
+}
+
+window.doLogout = async function() {
+  currentUser = null;
+  await storage.remove('currentUser');
+  updateDisplay();
+}
+
+function updateDisplay() {
+  const display = document.getElementById('userDisplay');
+  if (currentUser) {
+    display.innerHTML = \`Logged in as: <strong>\${currentUser.username}</strong>\`;
+  } else {
+    display.innerHTML = 'Not logged in';
+  }
+}
+
+function showNotification(msg) {
+  const notif = document.getElementById('notifications');
+  notif.textContent = msg;
+  setTimeout(() => notif.textContent = '', 3000);
+}
+
+init();`}
+/>
+
+<Aside type="tip">
+  Storage events only fire in **other** tabs, not the one that made the change. This is a browser limitation. To sync within the same tab, use other state management patterns.
+</Aside>
+
+## Best Practices
+
+When building advanced applications with StorageManager.js:
+
+1. **Use namespaces** to avoid key collisions between features
+2. **Set appropriate expirations** for temporary data
+3. **Use batch operations** when working with multiple items
+4. **Enable compression** for large objects to save space
+5. **Clean up listeners** when components unmount
+6. **Validate data** retrieved from storage before using it
+7. **Handle null values** gracefully (expired or missing keys)
+
+## Next Steps
+
+You've now seen the full power of StorageManager.js! For detailed API documentation, visit the [API Reference](/api/constructor/).

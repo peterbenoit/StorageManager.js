@@ -1,0 +1,219 @@
+---
+title: Batch Operations
+description: Efficiently handle multiple storage items at once with batch methods.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Batch operations allow you to work with multiple storage items at once, which is more efficient than calling individual methods in a loop.
+
+<Aside>
+  All batch methods are asynchronous and return Promises. Always use `await` or `.then()` when calling them.
+</Aside>
+
+## batchSet()
+
+Stores multiple items efficiently in a single operation. Each item can have its own expiration time.
+
+### Syntax
+
+```javascript
+await storage.batchSet(items)
+```
+
+### Parameters
+
+- `items` (Array) — An array of objects, each with these properties:
+  - `key` (String, required) — The key to store
+  - `value` (Any JSON-serializable, required) — The value to store
+  - `expiresIn` (Number, optional) — Expiration time in seconds
+
+### Returns
+
+`Promise<void>`
+
+### Example
+
+```javascript
+await storage.batchSet([
+  { key: 'user', value: { name: 'Alice' } },
+  { key: 'theme', value: 'dark' },
+  { key: 'session', value: 'xyz789', expiresIn: 3600 }, // Expires in 1 hour
+  { key: 'temp', value: 'test', expiresIn: 60 }         // Expires in 1 minute
+]);
+```
+
+### Use Cases
+
+- Initializing multiple storage items when a user logs in
+- Saving multiple form fields at once
+- Caching multiple API responses with different expiration times
+- Restoring state from a backup
+
+<Aside type="tip">
+  `batchSet()` is significantly faster than calling `set()` multiple times in a loop, especially when compression is enabled.
+</Aside>
+
+---
+
+## batchGet()
+
+Retrieves multiple items in a single operation.
+
+### Syntax
+
+```javascript
+await storage.batchGet(keys)
+```
+
+### Parameters
+
+- `keys` (Array of Strings) — An array of key names to retrieve
+
+### Returns
+
+`Promise<Object>` — An object mapping requested keys to their values. If a key doesn't exist or has expired, its value will be `null`.
+
+### Example
+
+```javascript
+// Store some items
+await storage.set('user', { name: 'Alice' });
+await storage.set('theme', 'dark');
+await storage.set('lang', 'en');
+
+// Retrieve multiple items
+const data = await storage.batchGet(['user', 'theme', 'lang', 'missing']);
+
+console.log(data);
+// Output: {
+//   user: { name: 'Alice' },
+//   theme: 'dark',
+//   lang: 'en',
+//   missing: null
+// }
+```
+
+### Use Cases
+
+- Loading multiple settings or preferences at once
+- Retrieving all data needed for a page in one operation
+- Checking multiple cache entries simultaneously
+- Bulk data export
+
+---
+
+## batchRemove()
+
+Removes multiple items in a single operation.
+
+### Syntax
+
+```javascript
+await storage.batchRemove(keys)
+```
+
+### Parameters
+
+- `keys` (Array of Strings) — An array of key names to remove
+
+### Returns
+
+`Promise<void>`
+
+### Example
+
+```javascript
+// Store some items
+await storage.set('temp1', 'value1');
+await storage.set('temp2', 'value2');
+await storage.set('temp3', 'value3');
+await storage.set('keep', 'important');
+
+// Remove multiple items at once
+await storage.batchRemove(['temp1', 'temp2', 'temp3']);
+
+// Verify
+const keys = await storage.keys();
+console.log(keys); // Output: ['keep']
+```
+
+### Use Cases
+
+- Cleaning up temporary data
+- Logging out a user (removing session, token, user data, etc.)
+- Clearing cache entries
+- Bulk deletion of related items
+
+<Aside>
+  `batchRemove()` is more efficient than calling `remove()` multiple times, especially for large numbers of keys.
+</Aside>
+
+---
+
+## Complete Batch Example
+
+Here's a comprehensive example using all batch operations together:
+
+```javascript
+// Initialize storage with multiple items
+await storage.batchSet([
+  { key: 'user', value: { id: 1, name: 'Alice' } },
+  { key: 'session', value: 'token-xyz', expiresIn: 3600 },
+  { key: 'preferences', value: { theme: 'dark', lang: 'en' } },
+  { key: 'cache:posts', value: [...], expiresIn: 1800 },
+  { key: 'cache:users', value: [...], expiresIn: 1800 }
+]);
+
+// Later: Load multiple items at once
+const data = await storage.batchGet([
+  'user',
+  'session',
+  'preferences',
+  'cache:posts'
+]);
+
+if (data.user && data.session) {
+  console.log(`Welcome back, ${data.user.name}!`);
+  console.log('Theme:', data.preferences.theme);
+}
+
+// On logout: Remove all user-related data
+await storage.batchRemove([
+  'user',
+  'session',
+  'preferences',
+  'cache:posts',
+  'cache:users'
+]);
+```
+
+## Performance Comparison
+
+Here's a comparison of individual vs. batch operations:
+
+```javascript
+// ❌ Inefficient: Individual operations
+console.time('individual');
+for (let i = 0; i < 100; i++) {
+  await storage.set(`item${i}`, { value: i });
+}
+console.timeEnd('individual'); // ~500ms
+
+// ✅ Efficient: Batch operation
+console.time('batch');
+const items = Array.from({ length: 100 }, (_, i) => ({
+  key: `item${i}`,
+  value: { value: i }
+}));
+await storage.batchSet(items);
+console.timeEnd('batch'); // ~50ms
+```
+
+<Aside type="tip">
+  When working with multiple items, always prefer batch operations over loops. They're faster, more efficient, and easier to read.
+</Aside>
+
+## Next Steps
+
+Learn about [Event Listeners](/api/event-listeners/) to monitor changes across tabs and windows.
