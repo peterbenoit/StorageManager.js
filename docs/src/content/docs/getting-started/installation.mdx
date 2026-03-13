@@ -52,12 +52,25 @@ You can include StorageManager.js directly from a CDN:
 </script>
 ```
 
+### unpkg
+
+```html
+<!-- Replace x.y.z with the desired version -->
+<script src="https://unpkg.com/web-storage-manager-js@x.y.z/StorageManager.js"></script>
+
+<script>
+  // StorageManager is now available globally
+  const storage = new StorageManager();
+</script>
+```
+
 ### Latest Version
 
 To always use the latest version (not recommended for production):
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/web-storage-manager-js/StorageManager.js"></script>
+<script src="https://unpkg.com/web-storage-manager-js/StorageManager.js"></script>
 ```
 
 ## Local Installation
