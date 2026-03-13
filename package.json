@@ -3,8 +3,18 @@
 	"version": "1.0.0",
 	"description": "Feature-rich localStorage/sessionStorage wrapper with expiration, compression, batch operations, and cross-tab event listeners",
 	"main": "StorageManager.js",
+	"exports": {
+		".": "./StorageManager.js"
+	},
+	"unpkg": "StorageManager.js",
+	"jsdelivr": "StorageManager.js",
 	"scripts": {
-		"test": "echo 'Open test/test-runner.html in your browser to run tests' && exit 0"
+		"test": "jest --runInBand",
+		"pack:check": "npm pack --dry-run",
+		"prepublishOnly": "npm test && npm run pack:check"
+	},
+	"devDependencies": {
+		"jest": "^29.7.0"
 	},
 	"files": [
 		"StorageManager.js",

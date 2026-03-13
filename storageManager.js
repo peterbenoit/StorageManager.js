@@ -73,6 +73,12 @@ class StorageManager {
 
 	_ensureLZStringLoaded() {
 		if (!this.enableCompression) return Promise.resolve();
+		if (typeof LZString !== "undefined") return Promise.resolve();
+		if (typeof document === "undefined") {
+			return Promise.reject(
+				new Error("LZString is not available and document is undefined.")
+			);
+		}
 		return include(
 			"https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"
 		);
@@ -112,15 +118,20 @@ class StorageManager {
 		if (!storedData) return null;
 
 		let data;
-		if (this.enableCompression) {
-			const decompressedData = LZString.decompressFromUTF16(storedData);
-			if (!decompressedData) {
-				console.error("Failed to decompress data for get.");
-				return null;
+		try {
+			if (this.enableCompression) {
+				const decompressedData = LZString.decompressFromUTF16(storedData);
+				if (!decompressedData) {
+					console.error("Failed to decompress data for get.");
+					return null;
+				}
+				data = JSON.parse(decompressedData);
+			} else {
+				data = JSON.parse(storedData);
 			}
-			data = JSON.parse(decompressedData);
-		} else {
-			data = JSON.parse(storedData);
+		} catch (error) {
+			console.error("Failed to parse stored data for get.", error);
+			return null;
 		}
 
 		if (data.expiration && Date.now() > data.expiration) {
@@ -356,4 +367,12 @@ class StorageManager {
 			this.listeners[namespacedKey](newData, null);
 		}
 	}
+}
+
+if (typeof window !== "undefined") {
+	window.StorageManager = StorageManager;
+}
+
+if (typeof module !== "undefined" && module.exports) {
+	module.exports = StorageManager;
 }

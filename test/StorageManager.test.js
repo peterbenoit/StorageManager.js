@@ -1,6 +1,6 @@
 /**
  * StorageManager.js Test Suite
- * 
+ *
  * Tests cover:
  * - Basic CRUD operations
  * - Compression enabled/disabled
@@ -10,6 +10,8 @@
  * - Event listeners
  * - Edge cases and error handling
  */
+
+const StorageManager = require('../StorageManager.js');
 
 // Mock localStorage and sessionStorage for testing
 class MockStorage {
@@ -57,6 +59,8 @@ global.window = {
 };
 global.LZString = mockLZString;
 
+let consoleErrorSpy;
+
 // Test utilities
 function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
@@ -70,8 +74,17 @@ function clearAllStorage() {
 // ===== TEST SUITE =====
 
 describe('StorageManager', () => {
+	beforeAll(() => {
+		consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+	});
+
+	afterAll(() => {
+		consoleErrorSpy.mockRestore();
+	});
+
 	beforeEach(() => {
 		clearAllStorage();
+		consoleErrorSpy.mockClear();
 	});
 
 	describe('Constructor & Initialization', () => {
@@ -590,6 +603,7 @@ describe('StorageManager', () => {
 		test('should handle expiring non-existent keys gracefully', async () => {
 			// Should log error but not throw
 			await storage.expires('nonexistent', 60);
+			expect(consoleErrorSpy).toHaveBeenCalledWith('No data found for key: nonexistent');
 		});
 	});
 

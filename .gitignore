@@ -1,2 +1,13 @@
 MIGRATION.md
 upgrade.md
+
+# Dependencies
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS artifacts
+.DS_Store

@@ -110,22 +110,28 @@ A live interactive demo and full documentation can be found here, hosted on Verc
 
 ## Testing
 
-The library includes a comprehensive test suite with 80+ tests covering all features and edge cases.
+The library includes a comprehensive test suite with 50+ tests covering all features and edge cases.
 
 ### Running Tests
 
-The easiest way to run tests is using the browser-based test runner:
+Run the terminal test suite:
+
+```bash
+npm test
+```
+
+Run a publish dry-run check (same check used by prepublish hook):
+
+```bash
+npm run pack:check
+```
+
+You can also use the browser-based test runner:
 
 ```bash
 # Open the test runner in your browser
 open test/test-runner.html
 # or on Windows: start test/test-runner.html
-```
-
-Alternatively, run the npm test script:
-
-```bash
-npm test
 ```
 
 The test suite validates:
