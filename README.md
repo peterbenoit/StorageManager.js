@@ -149,6 +149,45 @@ For more details on testing, see [test/README.md](test/README.md).
 
 This project's documentation and demo page is deployed using [Vercel](https://vercel.com/). The configuration can be found in `vercel.json`.
 
+## CDN Usage
+
+Use a pinned version in production for predictable behavior:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/web-storage-manager-js@1.0.1/StorageManager.js"></script>
+```
+
+Latest version via jsDelivr:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/web-storage-manager-js/StorageManager.js"></script>
+```
+
+Pinned version via unpkg:
+
+```html
+<script src="https://unpkg.com/web-storage-manager-js@1.0.1/StorageManager.js"></script>
+```
+
+After loading via script tag, access the class from `window.StorageManager`.
+
+## Release Steps
+
+```bash
+# 1) Confirm clean git status
+git status --short
+
+# 2) Run checks
+npm test
+npm run pack:check
+
+# 3) Bump version and create tag/commit
+npm version patch
+
+# 4) Publish to npm
+npm publish
+```
+
 ## License
 
 This project is licensed under the MIT License.
