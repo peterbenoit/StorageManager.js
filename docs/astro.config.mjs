@@ -7,6 +7,9 @@ export default defineConfig({
 	site: 'https://storage-manager-js.vercel.app',
 	integrations: [
 		starlight({
+			components: {
+				Footer: './src/components/Footer.astro',
+			},
 			title: 'StorageManager.js',
 			description: 'Feature-rich localStorage/sessionStorage wrapper with expiration, compression, batch operations, and cross-tab event listeners.',
 			social: [
