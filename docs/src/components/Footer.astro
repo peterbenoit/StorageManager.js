@@ -2,8 +2,28 @@
 import type { Props } from '@astrojs/starlight/props';
 ---
 
-<footer class="text-center mt-20 pb-10 border-t border-gray-100 pt-10 text-gray-400 text-sm">
-    <p>Built by <a href="https://peterbenoit.com"
-            class="text-gray-600 hover:text-gray-900 font-medium transition-colors">Peter Benoit</a>. &copy;
-        2026.</p>
+<footer class="site-footer">
+    <p>Built by <a href="https://peterbenoit.com">Peter Benoit</a>. &copy; 2026.</p>
 </footer>
+
+<style>
+    .site-footer {
+        text-align: center;
+        margin-top: 5rem;
+        padding: 2.5rem 1rem;
+        border-top: 1px solid var(--sl-color-gray-5);
+        color: var(--sl-color-gray-3);
+        font-size: var(--sl-text-sm);
+    }
+
+    .site-footer a {
+        color: var(--sl-color-gray-2);
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .site-footer a:hover {
+        color: var(--sl-color-white);
+    }
+</style>
