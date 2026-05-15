@@ -194,4 +194,4 @@ This project is licensed under the MIT License.
 
 ---
 
-Created by [Peter Benoit](https://www.peterbenoit.com)
+Created by [Peter Benoit](https://peterbenoit.com)

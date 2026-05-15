@@ -1,29 +1,32 @@
 ---
 import type { Props } from '@astrojs/starlight/props';
+import StarlightFooter from '@astrojs/starlight/components/Footer.astro';
 ---
 
-<footer class="site-footer">
-    <p>Built by <a href="https://peterbenoit.com">Peter Benoit</a>. &copy; 2026.</p>
-</footer>
+<StarlightFooter {...Astro.props} />
+
+<div class="author-credit">
+  <p>
+    Built by <a href="https://peterbenoit.com" target="_blank" rel="noopener noreferrer">Peter Benoit</a>
+    &nbsp;·&nbsp;
+    <a href="https://peterbenoit.com/storagemanager/" target="_blank" rel="noopener noreferrer">Portfolio page</a>
+  </p>
+</div>
 
 <style>
-    .site-footer {
-        text-align: center;
-        margin-top: 5rem;
-        padding: 2.5rem 1rem;
-        border-top: 1px solid var(--sl-color-gray-5);
-        color: var(--sl-color-gray-3);
-        font-size: var(--sl-text-sm);
-    }
+  .author-credit {
+    text-align: center;
+    padding: 0.25rem 1rem 1.25rem;
+    font-size: 0.8rem;
+    color: var(--sl-color-gray-4);
+  }
 
-    .site-footer a {
-        color: var(--sl-color-gray-2);
-        font-weight: 500;
-        text-decoration: none;
-        transition: color 0.2s ease;
-    }
+  .author-credit a {
+    color: var(--sl-color-accent-high);
+    text-decoration: none;
+  }
 
-    .site-footer a:hover {
-        color: var(--sl-color-white);
-    }
+  .author-credit a:hover {
+    text-decoration: underline;
+  }
 </style>
